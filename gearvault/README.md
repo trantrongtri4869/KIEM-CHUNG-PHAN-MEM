@@ -1,368 +1,382 @@
-# ⚡ GearVault — Premium Gaming Gear Ecommerce
+# ⚡ GearVault — Nền Tảng Thương Mại Điện Tử Thiết Bị Gaming Cao Cấp
 
 <div align="center">
 
-![GearVault Banner](https://images.unsplash.com/photo-1593640408182-31c228b9d763?w=1200&h=400&fit=crop&q=80)
+**Một website thương mại điện tử đầy đủ tính năng dành cho thiết bị gaming**
 
-**A full-featured, production-quality ecommerce platform for gaming peripherals**
-
-[![React](https://img.shields.io/badge/React-18.2-61dafb?logo=react)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.2-3178c6?logo=typescript)](https://www.typescriptlang.org)
-[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38bdf8?logo=tailwindcss)](https://tailwindcss.com)
-[![Node.js](https://img.shields.io/badge/Node.js-Express-339933?logo=node.js)](https://nodejs.org)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?logo=mongodb)](https://mongodb.com)
-
-[🎮 Live Demo](#) · [📸 Screenshots](#screenshots) · [🚀 Quick Start](#quick-start)
+[🎮 Demo](#) · [📸 Ảnh giao diện](#screenshots) · [🚀 Hướng dẫn chạy](#quick-start)
 
 </div>
 
 ---
 
-## 📋 Table of Contents
+# 📋 Mục lục
 
-- [About the Project](#about)
-- [Tech Stack](#tech-stack)
-- [Features](#features)
-- [Screenshots](#screenshots)
-- [Quick Start](#quick-start)
-- [Project Structure](#structure)
-- [API Reference](#api)
-- [Testing Guide](#testing)
-- [Demo Accounts](#demo)
-
----
-
-## 🎯 About the Project <a name="about"></a>
-
-GearVault is a **production-quality** ecommerce web application built as a portfolio project. It showcases modern full-stack development practices including clean architecture, responsive UI/UX, JWT authentication, state management, and comprehensive testing.
-
-**Built for:**
-- 📄 Portfolio/CV showcase
-- 🎥 Video demo recording
-- ✅ Manual & automation testing practice
-- 🧪 Writing test cases (Tester/QA role)
-- 💼 Frontend/Fullstack Developer job applications
+* [Giới thiệu dự án](#about)
+* [Công nghệ sử dụng](#tech-stack)
+* [Tính năng](#features)
+* [Ảnh giao diện](#screenshots)
+* [Hướng dẫn chạy](#quick-start)
+* [Cấu trúc dự án](#structure)
+* [Tài liệu API](#api)
+* [Hướng dẫn Testing](#testing)
+* [Tài khoản demo](#demo)
 
 ---
 
-## 🛠️ Tech Stack <a name="tech-stack"></a>
+# 🎯 Giới thiệu dự án <a name="about"></a>
 
-### Frontend
-| Technology | Purpose |
-|-----------|---------|
-| React 18 + Vite | UI framework + fast bundler |
-| TypeScript | Type safety |
-| TailwindCSS | Utility-first styling |
-| Framer Motion | Smooth animations |
-| Zustand | Lightweight state management |
-| React Router v6 | Client-side routing |
-| React Hook Form + Zod | Form handling + validation |
-| Axios | HTTP client |
-| Recharts | Admin dashboard charts |
-| Lucide React | Icon library |
-| React Hot Toast | Toast notifications |
+GearVault là một website thương mại điện tử chất lượng cao được xây dựng nhằm phục vụ mục đích portfolio cá nhân. Dự án thể hiện quy trình phát triển Full-stack hiện đại bao gồm kiến trúc sạch, giao diện responsive, xác thực JWT, quản lý state và kiểm thử toàn diện.
 
-### Backend
-| Technology | Purpose |
-|-----------|---------|
-| Node.js + Express | REST API server |
-| MongoDB + Mongoose | Database + ODM |
-| JWT | Authentication |
-| bcryptjs | Password hashing |
-| express-validator | Input validation |
-| Helmet + rate-limit | Security middleware |
-| Morgan | HTTP logging |
+## 🎯 Mục đích xây dựng
 
-### Testing
-| Technology | Purpose |
-|-----------|---------|
-| Vitest | Unit/component test runner |
-| React Testing Library | Component testing |
-| Cypress (optional) | E2E testing |
+* 📄 Làm portfolio/CV
+* 🎥 Quay video demo
+* ✅ Thực hành Manual Testing & Automation Testing
+* 🧪 Viết test case cho vị trí Tester/QA
+* 💼 Ứng tuyển Frontend/Fullstack Developer
 
 ---
 
-## ✨ Features <a name="features"></a>
+# 🛠️ Công nghệ sử dụng <a name="tech-stack"></a>
 
-### 🛒 Shopping
-- [x] Product listing with grid layout
-- [x] Advanced filter (category, brand, price, rating)
-- [x] Real-time search
-- [x] Sort (newest, price, rating, popular)
-- [x] Product detail with image gallery
-- [x] Quick add to cart
-- [x] Cart drawer with slide animation
-- [x] Coupon code system (GEAR10, GEAR20, NEWUSER, FLASHSALE)
-- [x] Free shipping threshold progress bar
-- [x] Wishlist management
-- [x] Stock status indicator
+## Frontend
 
-### 💳 Checkout
-- [x] 3-step checkout flow (Shipping → Payment → Review)
-- [x] Form validation with Zod
-- [x] Multiple payment methods (Card, PayPal, COD)
-- [x] Order confirmation page with order ID
-
-### 🔐 Authentication
-- [x] JWT-based login/register
-- [x] Protected routes
-- [x] Password strength indicator
-- [x] Demo accounts (one-click fill)
-- [x] Persistent auth state
-
-### 👤 User Dashboard
-- [x] Profile management
-- [x] Order history with status badges
-- [x] Wishlist view
-- [x] Settings page
-
-### ⚡ Admin Dashboard
-- [x] Revenue area chart
-- [x] Orders bar chart
-- [x] Top products ranking
-- [x] Product CRUD table
-- [x] User management table
-- [x] Order management
-
-### 🎨 UI/UX
-- [x] Dark mode / Light mode
-- [x] Fully responsive (mobile, tablet, desktop)
-- [x] Sticky blur navbar
-- [x] Skeleton loading states
-- [x] Empty states
-- [x] 404 page
-- [x] Smooth page animations
-- [x] Toast notifications
-- [x] Hover animations on product cards
-- [x] Flash sale countdown timer
+| Công nghệ             | Mục đích                          |
+| --------------------- | --------------------------------- |
+| React 18 + Vite       | Framework giao diện + build nhanh |
+| TypeScript            | Kiểm soát kiểu dữ liệu            |
+| TailwindCSS           | Thiết kế giao diện                |
+| Framer Motion         | Hiệu ứng animation                |
+| Zustand               | Quản lý state                     |
+| React Router v6       | Điều hướng trang                  |
+| React Hook Form + Zod | Form + validation                 |
+| Axios                 | Gửi HTTP request                  |
+| Recharts              | Biểu đồ dashboard                 |
+| Lucide React          | Icon                              |
+| React Hot Toast       | Thông báo                         |
 
 ---
 
-## 📸 Screenshots <a name="screenshots"></a>
+## Backend
 
-> Take screenshots of these pages for your portfolio:
-
-| Page | URL | Key Features |
-|------|-----|-------------|
-| Home | `/` | Hero, categories, flash sale, testimonials |
-| Products | `/products` | Filter sidebar, grid, search |
-| Product Detail | `/products/razer-deathadder-v3-pro` | Gallery, specs, reviews |
-| Cart | `/cart` | Coupon, quantity, summary |
-| Checkout | `/checkout` | 3-step form, order success |
-| Login | `/login` | Demo accounts, validation |
-| Dashboard | `/dashboard` | Profile, orders, wishlist |
-| Admin | `/admin` | Charts, tables |
+| Công nghệ           | Mục đích            |
+| ------------------- | ------------------- |
+| Node.js + Express   | REST API server     |
+| MongoDB + Mongoose  | Database            |
+| JWT                 | Xác thực người dùng |
+| bcryptjs            | Mã hóa mật khẩu     |
+| express-validator   | Kiểm tra dữ liệu    |
+| Helmet + rate-limit | Bảo mật             |
+| Morgan              | Logging request     |
 
 ---
 
-## 🚀 Quick Start <a name="quick-start"></a>
+## Testing
 
-### Prerequisites
+| Công nghệ             | Mục đích           |
+| --------------------- | ------------------ |
+| Vitest                | Unit test          |
+| React Testing Library | Component testing  |
+| Cypress               | End-to-end testing |
 
-Make sure you have installed:
-- **Node.js** v18+ → [download](https://nodejs.org)
-- **MongoDB** v6+ → [download](https://mongodb.com/try/download/community)
-- **Git** → [download](https://git-scm.com)
+---
 
-### Step-by-step Installation
+# ✨ Tính năng <a name="features"></a>
+
+## 🛒 Mua sắm
+
+* Danh sách sản phẩm dạng grid
+* Bộ lọc nâng cao (category, brand, price, rating)
+* Tìm kiếm realtime
+* Sắp xếp theo giá, đánh giá, mới nhất
+* Trang chi tiết sản phẩm
+* Thêm vào giỏ hàng nhanh
+* Giỏ hàng dạng drawer animation
+* Hệ thống mã giảm giá
+* Thanh tiến trình miễn phí vận chuyển
+* Wishlist
+* Hiển thị trạng thái còn hàng
+
+---
+
+## 💳 Thanh toán
+
+* Quy trình checkout 3 bước
+* Validation bằng Zod
+* Nhiều phương thức thanh toán
+* Trang xác nhận đơn hàng
+
+---
+
+## 🔐 Xác thực
+
+* Đăng nhập/đăng ký bằng JWT
+* Protected Route
+* Hiển thị độ mạnh mật khẩu
+* Demo account
+* Lưu trạng thái đăng nhập
+
+---
+
+## 👤 Dashboard người dùng
+
+* Quản lý profile
+* Lịch sử đơn hàng
+* Wishlist
+* Cài đặt tài khoản
+
+---
+
+## ⚡ Dashboard admin
+
+* Biểu đồ doanh thu
+* Biểu đồ đơn hàng
+* Top sản phẩm bán chạy
+* CRUD sản phẩm
+* Quản lý người dùng
+* Quản lý đơn hàng
+
+---
+
+## 🎨 UI/UX
+
+* Dark mode / Light mode
+* Responsive trên mọi thiết bị
+* Navbar sticky blur
+* Skeleton loading
+* Empty state
+* Trang 404
+* Animation mượt
+* Toast notification
+* Hover animation
+* Flash sale countdown
+
+---
+
+# 📸 Ảnh giao diện <a name="screenshots"></a>
+
+| Trang             | URL             | Chức năng        |
+| ----------------- | --------------- | ---------------- |
+| Trang chủ         | `/`             | Hero, flash sale |
+| Sản phẩm          | `/products`     | Filter, search   |
+| Chi tiết sản phẩm | `/products/...` | Gallery, review  |
+| Giỏ hàng          | `/cart`         | Coupon, summary  |
+| Thanh toán        | `/checkout`     | Form 3 bước      |
+| Đăng nhập         | `/login`        | Validation       |
+| Dashboard         | `/dashboard`    | Orders, profile  |
+| Admin             | `/admin`        | Charts, tables   |
+
+---
+
+# 🚀 Hướng dẫn chạy dự án <a name="quick-start"></a>
+
+## Yêu cầu cài đặt
+
+Cần cài:
+
+* Node.js v18+
+* MongoDB v6+
+* Git
+
+---
+
+# Cài đặt từng bước
 
 ```bash
-# 1. Clone the repository
+# Clone project
 git clone https://github.com/yourusername/gearvault.git
+
 cd gearvault
 
-# 2. Install all dependencies (root + frontend + backend)
+# Cài dependency
 npm run install:all
 
-# 3. Configure environment variables
-# Backend:
+# Tạo file môi trường
 cp backend/.env.example backend/.env
-# Edit backend/.env and set your MONGODB_URI if needed
 
-# 4. Start MongoDB (if running locally)
-mongod --dbpath /data/db    # Mac/Linux
-# or start MongoDB Compass
+# Khởi động MongoDB
+mongod --dbpath /data/db
 
-# 5. Seed the database with sample data
+# Seed dữ liệu mẫu
 npm run seed
 
-# 6. Start both frontend and backend
+# Chạy frontend + backend
 npm run dev
-```
-
-**Frontend:** http://localhost:5173  
-**Backend API:** http://localhost:5000  
-**API Health Check:** http://localhost:5000/api/health
-
-### Run frontend only (without backend)
-```bash
-cd frontend
-npm run dev
-# The app works fully with mock data — no backend needed!
 ```
 
 ---
 
-## 📁 Project Structure <a name="structure"></a>
+## Địa chỉ chạy
 
+Frontend:
+
+```text
+http://localhost:5173
 ```
+
+Backend:
+
+```text
+http://localhost:5000
+```
+
+API Health:
+
+```text
+http://localhost:5000/api/health
+```
+
+---
+
+# 📁 Cấu trúc dự án <a name="structure"></a>
+
+```text
 gearvault/
-├── frontend/                  # React + Vite app
+├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── layout/        # Navbar, Footer, Layout
-│   │   │   ├── product/       # ProductCard, ProductGrid
-│   │   │   ├── cart/          # CartDrawer
-│   │   │   ├── ui/            # StarRating, shared UI
-│   │   │   └── shared/        # ProtectedRoute
 │   │   ├── pages/
-│   │   │   ├── HomePage.tsx
-│   │   │   ├── ProductsPage.tsx
-│   │   │   ├── ProductDetailPage.tsx
-│   │   │   ├── CartPage.tsx
-│   │   │   ├── CheckoutPage.tsx
-│   │   │   ├── AuthPages.tsx
-│   │   │   ├── DashboardPage.tsx
-│   │   │   ├── AdminPage.tsx
-│   │   │   └── OtherPages.tsx
-│   │   ├── store/             # Zustand stores (auth, cart, wishlist, UI)
-│   │   ├── services/          # Axios API service layer
-│   │   ├── types/             # TypeScript interfaces
-│   │   ├── utils/             # Mock data, helpers
-│   │   ├── test/              # Vitest unit + component tests
-│   │   └── styles/            # Global CSS
+│   │   ├── store/
+│   │   ├── services/
+│   │   ├── types/
+│   │   ├── utils/
+│   │   ├── test/
+│   │   └── styles/
 │   ├── package.json
-│   ├── vite.config.ts
-│   └── tailwind.config.js
+│   └── vite.config.ts
 │
-├── backend/                   # Node.js + Express API
+├── backend/
 │   ├── src/
-│   │   ├── models/            # Mongoose schemas
-│   │   ├── routes/            # Express route handlers
-│   │   ├── middleware/        # Auth JWT, error handling
-│   │   └── seeds/             # Database seed script
+│   │   ├── models/
+│   │   ├── routes/
+│   │   ├── middleware/
+│   │   └── seeds/
 │   ├── package.json
 │   └── .env
 │
-└── package.json               # Root scripts
+└── package.json
 ```
 
 ---
 
-## 🔌 API Reference <a name="api"></a>
+# 🔌 Tài liệu API <a name="api"></a>
 
-### Auth
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/auth/register` | - | Register new user |
-| POST | `/api/auth/login` | - | Login, returns JWT |
-| GET | `/api/auth/profile` | JWT | Get current user |
-| PUT | `/api/auth/profile` | JWT | Update profile |
+## Authentication
 
-### Products
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/products` | - | List products (with filters) |
-| GET | `/api/products/featured` | - | Featured products |
-| GET | `/api/products/flash-sale` | - | Flash sale products |
-| GET | `/api/products/best-sellers` | - | Best selling products |
-| GET | `/api/products/:slug` | - | Single product |
-| POST | `/api/products` | Admin | Create product |
-| PUT | `/api/products/:id` | Admin | Update product |
-| DELETE | `/api/products/:id` | Admin | Delete product |
-
-### Orders
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/orders` | JWT | Create order |
-| GET | `/api/orders/my` | JWT | My orders |
-| GET | `/api/orders` | Admin | All orders |
-| PUT | `/api/orders/:id/status` | Admin | Update status |
-
-### Query Parameters (GET /api/products)
-```
-?category=gaming-mice
-?brand=Razer
-?minPrice=50&maxPrice=200
-?rating=4
-?sort=price_asc | price_desc | newest | rating | popular
-?search=wireless mouse
-?page=1&limit=12
-?featured=true
-?sale=true
-```
+| Method | Endpoint             | Mô tả              |
+| ------ | -------------------- | ------------------ |
+| POST   | `/api/auth/register` | Đăng ký            |
+| POST   | `/api/auth/login`    | Đăng nhập          |
+| GET    | `/api/auth/profile`  | Lấy thông tin user |
+| PUT    | `/api/auth/profile`  | Cập nhật profile   |
 
 ---
 
-## 🧪 Testing Guide <a name="testing"></a>
+## Products
 
-### Run Unit Tests
+| Method | Endpoint                   | Mô tả              |
+| ------ | -------------------------- | ------------------ |
+| GET    | `/api/products`            | Danh sách sản phẩm |
+| GET    | `/api/products/featured`   | Sản phẩm nổi bật   |
+| GET    | `/api/products/flash-sale` | Flash sale         |
+| GET    | `/api/products/:slug`      | Chi tiết sản phẩm  |
+| POST   | `/api/products`            | Tạo sản phẩm       |
+| PUT    | `/api/products/:id`        | Cập nhật           |
+| DELETE | `/api/products/:id`        | Xóa                |
+
+---
+
+## Orders
+
+| Method | Endpoint                 | Mô tả               |
+| ------ | ------------------------ | ------------------- |
+| POST   | `/api/orders`            | Tạo đơn hàng        |
+| GET    | `/api/orders/my`         | Đơn hàng của tôi    |
+| GET    | `/api/orders`            | Tất cả đơn hàng     |
+| PUT    | `/api/orders/:id/status` | Cập nhật trạng thái |
+
+---
+
+# 🧪 Hướng dẫn Testing <a name="testing"></a>
+
+## Chạy Unit Test
+
 ```bash
 cd frontend
-npm run test           # Run all tests
-npm run test:ui        # Open Vitest UI
-npm run test:coverage  # Coverage report
+
+npm run test
+npm run test:ui
+npm run test:coverage
 ```
 
-### Test Cases for Manual Testing
+---
 
-#### ✅ Happy Path
-1. Register new account → Login → Add to cart → Checkout → Order success
-2. Browse products → Filter by category → Sort by price → View detail
-3. Add to wishlist → View wishlist → Move to cart
+# Các test case quan trọng
 
-#### ❌ Error States to Test
-| Test Case | How to trigger |
-|-----------|---------------|
-| Login with wrong password | Enter wrong credentials |
-| Out of stock product | View SteelSeries QcK Heavy XXL |
-| Empty cart | Navigate to /cart with nothing added |
-| Invalid coupon | Enter "INVALID123" at cart |
-| Form validation | Submit checkout with empty fields |
-| Protected route | Navigate to /dashboard when logged out |
-| Admin-only route | Login as user, navigate to /admin |
+## ✅ Happy Path
 
-#### 🎟️ Test Coupons
-| Code | Discount | Min Order |
-|------|----------|-----------|
-| GEAR10 | -$10 | $50 |
-| GEAR20 | -$20 | $100 |
-| NEWUSER | -$15 | No min |
-| FLASHSALE | -$30 | $150 |
+1. Đăng ký → Đăng nhập → Thêm giỏ hàng → Thanh toán
+2. Tìm kiếm sản phẩm → Filter → Xem chi tiết
+3. Wishlist → Chuyển vào cart
 
 ---
 
-## 👤 Demo Accounts <a name="demo"></a>
+## ❌ Error Cases
 
-| Role | Email | Password | Access |
-|------|-------|----------|--------|
-| Admin | admin@gearvault.com | admin123 | Full admin panel |
-| User | user@gearvault.com | user123 | User dashboard |
-
-> 💡 **Tip:** On the Login page, click "Demo User" or "Demo Admin" to auto-fill credentials.
-
----
-
-## 🗺️ Demo Flow for Portfolio Video
-
-1. **Home page** — Show hero, categories, flash sale countdown
-2. **Browse products** — Apply filters, sort, search
-3. **Product detail** — Gallery, specs tab, reviews tab
-4. **Add to cart** — Cart drawer animation, coupon code
-5. **Checkout** — 3-step form, order success
-6. **Dashboard** — Profile, orders
-7. **Admin panel** — Charts, product table, orders
-8. **Dark mode** — Toggle in navbar
-9. **Mobile view** — Responsive layout
+| Test case       | Cách test                          |
+| --------------- | ---------------------------------- |
+| Sai mật khẩu    | Nhập password sai                  |
+| Hết hàng        | Xem sản phẩm hết stock             |
+| Cart rỗng       | Truy cập cart khi chưa có sản phẩm |
+| Coupon sai      | Nhập mã không hợp lệ               |
+| Validation form | Submit form rỗng                   |
+| Protected route | Truy cập dashboard khi chưa login  |
+| Admin route     | User thường vào admin              |
 
 ---
 
-## 📄 License
+# 🎟️ Mã giảm giá test
 
-MIT © 2024 GearVault
+| Code      | Giảm giá | Điều kiện     |
+| --------- | -------- | ------------- |
+| GEAR10    | -10$     | Đơn từ 50$    |
+| GEAR20    | -20$     | Đơn từ 100$   |
+| NEWUSER   | -15$     | Không yêu cầu |
+| FLASHSALE | -30$     | Đơn từ 150$   |
+
+---
+
+# 👤 Tài khoản demo <a name="demo"></a>
+
+| Vai trò | Email                                             | Password |
+| ------- | ------------------------------------------------- | -------- |
+| Admin   | [admin@gearvault.com](mailto:admin@gearvault.com) | admin123 |
+| User    | [user@gearvault.com](mailto:user@gearvault.com)   | user123  |
+
+---
+
+# 🗺️ Flow demo dự án
+
+1. Trang chủ
+2. Xem sản phẩm
+3. Filter + search
+4. Chi tiết sản phẩm
+5. Thêm giỏ hàng
+6. Checkout
+7. Dashboard
+8. Admin panel
+9. Dark mode
+10. Responsive mobile
+
+---
+
+# 📄 Giấy phép
+
+MIT License © 2024 GearVault
 
 ---
 
 <div align="center">
-  Built with ❤️ for portfolio & learning purposes
+Dự án được xây dựng phục vụ mục đích học tập và portfolio ❤️
 </div>
