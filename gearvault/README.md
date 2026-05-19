@@ -1,44 +1,44 @@
-# ⚡ GearVault — Nền Tảng Thương Mại Điện Tử Thiết Bị Gaming Cao Cấp
+# GearVault — Nền Tảng Thương Mại Điện Tử Thiết Bị Gaming Cao Cấp
 
 <div align="center">
 
-**Một website thương mại điện tử đầy đủ tính năng dành cho thiết bị gaming**
+Một website thương mại điện tử đầy đủ tính năng dành cho thiết bị gaming
 
-[🎮 Demo](#) · [📸 Ảnh giao diện](#screenshots) · [🚀 Hướng dẫn chạy](#quick-start)
+Demo · Ảnh giao diện · Hướng dẫn chạy
 
 </div>
 
 ---
 
-# 📋 Mục lục
+# Mục lục
 
-* [Giới thiệu dự án](#about)
-* [Công nghệ sử dụng](#tech-stack)
-* [Tính năng](#features)
-* [Ảnh giao diện](#screenshots)
-* [Hướng dẫn chạy](#quick-start)
-* [Cấu trúc dự án](#structure)
-* [Tài liệu API](#api)
-* [Hướng dẫn Testing](#testing)
-* [Tài khoản demo](#demo)
+* Giới thiệu dự án
+* Công nghệ sử dụng
+* Tính năng
+* Ảnh giao diện
+* Hướng dẫn chạy
+* Cấu trúc dự án
+* Tài liệu API
+* Hướng dẫn Testing
+* Tài khoản demo
 
 ---
 
-# 🎯 Giới thiệu dự án <a name="about"></a>
+# Giới thiệu dự án
 
 GearVault là một website thương mại điện tử chất lượng cao được xây dựng nhằm phục vụ mục đích portfolio cá nhân. Dự án thể hiện quy trình phát triển Full-stack hiện đại bao gồm kiến trúc sạch, giao diện responsive, xác thực JWT, quản lý state và kiểm thử toàn diện.
 
-## 🎯 Mục đích xây dựng
+## Mục đích xây dựng
 
-* 📄 Làm portfolio/CV
-* 🎥 Quay video demo
-* ✅ Thực hành Manual Testing & Automation Testing
-* 🧪 Viết test case cho vị trí Tester/QA
-* 💼 Ứng tuyển Frontend/Fullstack Developer
+* Làm portfolio/CV
+* Quay video demo
+* Thực hành Manual Testing & Automation Testing
+* Viết test case cho vị trí Tester/QA
+* Ứng tuyển Frontend/Fullstack Developer
 
 ---
 
-# 🛠️ Công nghệ sử dụng <a name="tech-stack"></a>
+# Công nghệ sử dụng
 
 ## Frontend
 
@@ -82,9 +82,9 @@ GearVault là một website thương mại điện tử chất lượng cao đư
 
 ---
 
-# ✨ Tính năng <a name="features"></a>
+# Tính năng
 
-## 🛒 Mua sắm
+## Mua sắm
 
 * Danh sách sản phẩm dạng grid
 * Bộ lọc nâng cao (category, brand, price, rating)
@@ -100,7 +100,7 @@ GearVault là một website thương mại điện tử chất lượng cao đư
 
 ---
 
-## 💳 Thanh toán
+## Thanh toán
 
 * Quy trình checkout 3 bước
 * Validation bằng Zod
@@ -109,7 +109,7 @@ GearVault là một website thương mại điện tử chất lượng cao đư
 
 ---
 
-## 🔐 Xác thực
+## Xác thực
 
 * Đăng nhập/đăng ký bằng JWT
 * Protected Route
@@ -119,7 +119,7 @@ GearVault là một website thương mại điện tử chất lượng cao đư
 
 ---
 
-## 👤 Dashboard người dùng
+## Dashboard người dùng
 
 * Quản lý profile
 * Lịch sử đơn hàng
@@ -128,7 +128,7 @@ GearVault là một website thương mại điện tử chất lượng cao đư
 
 ---
 
-## ⚡ Dashboard admin
+## Dashboard admin
 
 * Biểu đồ doanh thu
 * Biểu đồ đơn hàng
@@ -139,7 +139,7 @@ GearVault là một website thương mại điện tử chất lượng cao đư
 
 ---
 
-## 🎨 UI/UX
+## UI/UX
 
 * Dark mode / Light mode
 * Responsive trên mọi thiết bị
@@ -154,7 +154,7 @@ GearVault là một website thương mại điện tử chất lượng cao đư
 
 ---
 
-# 📸 Ảnh giao diện <a name="screenshots"></a>
+# Ảnh giao diện
 
 | Trang             | URL             | Chức năng        |
 | ----------------- | --------------- | ---------------- |
@@ -169,7 +169,7 @@ GearVault là một website thương mại điện tử chất lượng cao đư
 
 ---
 
-# 🚀 Hướng dẫn chạy dự án <a name="quick-start"></a>
+# Hướng dẫn chạy dự án
 
 ## Yêu cầu cài đặt
 
@@ -229,7 +229,7 @@ http://localhost:5000/api/health
 
 ---
 
-# 📁 Cấu trúc dự án <a name="structure"></a>
+# Cấu trúc dự án
 
 ```text
 gearvault/
@@ -260,7 +260,7 @@ gearvault/
 
 ---
 
-# 🔌 Tài liệu API <a name="api"></a>
+# Tài liệu API
 
 ## Authentication
 
@@ -298,7 +298,7 @@ gearvault/
 
 ---
 
-# 🧪 Hướng dẫn Testing <a name="testing"></a>
+# Hướng dẫn Testing
 
 ## Chạy Unit Test
 
@@ -314,7 +314,7 @@ npm run test:coverage
 
 # Các test case quan trọng
 
-## ✅ Happy Path
+## Happy Path
 
 1. Đăng ký → Đăng nhập → Thêm giỏ hàng → Thanh toán
 2. Tìm kiếm sản phẩm → Filter → Xem chi tiết
@@ -322,7 +322,7 @@ npm run test:coverage
 
 ---
 
-## ❌ Error Cases
+## Error Cases
 
 | Test case       | Cách test                          |
 | --------------- | ---------------------------------- |
@@ -336,7 +336,7 @@ npm run test:coverage
 
 ---
 
-# 🎟️ Mã giảm giá test
+# Mã giảm giá test
 
 | Code      | Giảm giá | Điều kiện     |
 | --------- | -------- | ------------- |
@@ -347,7 +347,7 @@ npm run test:coverage
 
 ---
 
-# 👤 Tài khoản demo <a name="demo"></a>
+# Tài khoản demo
 
 | Vai trò | Email                                             | Password |
 | ------- | ------------------------------------------------- | -------- |
@@ -356,7 +356,7 @@ npm run test:coverage
 
 ---
 
-# 🗺️ Flow demo dự án
+# Flow demo dự án
 
 1. Trang chủ
 2. Xem sản phẩm
@@ -371,12 +371,12 @@ npm run test:coverage
 
 ---
 
-# 📄 Giấy phép
+# Giấy phép
 
 MIT License © 2024 GearVault
 
 ---
 
 <div align="center">
-Dự án được xây dựng phục vụ mục đích học tập và portfolio ❤️
+Dự án được xây dựng phục vụ mục đích học tập và portfolio
 </div>
