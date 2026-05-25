@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- ════════════════════════════════════ -->
+    <!-- THÔNG TIN PROJECT                    -->
+    <!-- ════════════════════════════════════ -->
+    <groupId>gearvault</groupId>
+    <artifactId>gearvault-automation</artifactId>
+    <version>1.0</version>
+    <packaging>jar</packaging>
+    <name>GearVault Automation Testing</name>
+    <description>Selenium + TestNG automation tests cho GearVault</description>
+
+    <!-- ════════════════════════════════════ -->
+    <!-- CẤU HÌNH CHUNG                       -->
+    <!-- ════════════════════════════════════ -->
+    <properties>
+        <!-- Dùng Java 17 -->
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Phiên bản các thư viện -->
+        <selenium.version>4.18.1</selenium.version>
+        <webdrivermanager.version>5.7.0</webdrivermanager.version>
+        <testng.version>7.9.0</testng.version>
+        <extentreports.version>5.1.1</extentreports.version>
+        <sonar.version>3.10.0.2594</sonar.version>
+        <jacoco.version>0.8.11</jacoco.version>
+
+        <!-- Cấu hình SonarCloud -->
+        <sonar.projectKey>trantrongtri4869_KIEM-CHUNG-PHAN-MEM</sonar.projectKey>
+        <sonar.organization>trantrongtri4869</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+    </properties>
+
+    <!-- ════════════════════════════════════ -->
+    <!-- THƯ VIỆN CẦN DÙNG (Dependencies)    -->
+    <!-- ════════════════════════════════════ -->
+    <dependencies>
+
+        <!-- 1. Selenium: điều khiển trình duyệt tự động -->
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <version>${selenium.version}</version>
+        </dependency>
+
+        <!-- 2. WebDriverManager: tự tải ChromeDriver đúng version -->
+        <!--    Không cần cài ChromeDriver thủ công nữa            -->
+        <dependency>
+            <groupId>io.github.bonigarcia</groupId>
+            <artifactId>webdrivermanager</artifactId>
+            <version>${webdrivermanager.version}</version>
+        </dependency>
+
+        <!-- 3. TestNG: framework chạy test, tạo báo cáo -->
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>${testng.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- 4. ExtentReports: tạo báo cáo HTML đẹp -->
+        <dependency>
+            <groupId>com.aventstack</groupId>
+            <artifactId>extentreports</artifactId>
+            <version>${extentreports.version}</version>
+        </dependency>
+
+    </dependencies>
+
+    <!-- ════════════════════════════════════ -->
+    <!-- PLUGINS (Các công đoạn build)        -->
+    <!-- ════════════════════════════════════ -->
+    <build>
+        <plugins>
+
+            <!-- ─────────────────────────────── -->
+            <!-- PLUGIN 1: Maven Compiler         -->
+            <!-- Mục đích: compile code Java 17   -->
+            <!-- ─────────────────────────────── -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.12.1</version>
+                <configuration>
+                    <source>17</source>
+                    <target>17</target>
+                </configuration>
+            </plugin>
+
+            <!-- ─────────────────────────────────────────── -->
+            <!-- PLUGIN 2: Maven Surefire                     -->
+            <!-- Mục đích: chạy TestNG test suite            -->
+            <!-- Đọc file testng.xml để biết chạy test nào   -->
+            <!-- ─────────────────────────────────────────── -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <!-- Đọc file testng.xml -->
+                    <suiteXmlFiles>
+                        <suiteXmlFile>testng.xml</suiteXmlFile>
+                    </suiteXmlFiles>
+                    <!-- Các tham số truyền vào khi chạy -->
+                    <systemPropertyVariables>
+                        <!-- URL website cần test -->
+                        <test.baseUrl>http://localhost:5173</test.baseUrl>
+                        <!-- Chạy Chrome không hiện cửa sổ (headless) -->
+                        <chrome.headless>true</chrome.headless>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+
+            <!-- ─────────────────────────────────────────── -->
+            <!-- PLUGIN 3: JaCoCo                            -->
+            <!-- Mục đích: đo test coverage (bao nhiêu %     -->
+            <!-- code được test)                             -->
+            <!-- SonarCloud dùng data này để hiện báo cáo   -->
+            <!-- ─────────────────────────────────────────── -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+
+                    <!-- Bắt đầu đo coverage trước khi test chạy -->
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+
+                    <!-- Tạo báo cáo coverage sau khi test xong -->
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <!-- Báo cáo lưu ở đây -->
+                        <configuration>
+                            <outputDirectory>
+                                ${project.build.directory}/jacoco-report
+                            </outputDirectory>
+                        </configuration>
+                    </execution>
+
+                </executions>
+            </plugin>
+
+            <!-- ─────────────────────────────────────────── -->
+            <!-- PLUGIN 4: SonarQube (SonarCloud)            -->
+            <!-- Mục đích: gửi code lên SonarCloud phân tích -->
+            <!-- Chạy bằng lệnh: mvn sonar:sonar             -->
+            <!-- ─────────────────────────────────────────── -->
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>${sonar.version}</version>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>

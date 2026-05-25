@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<suite name="GearVault Full Test Suite" verbose="2" parallel="none">
+
+    <!-- ════════════════════════════ -->
+    <!-- TEST 1: Kiểm tra Đăng nhập  -->
+    <!-- ════════════════════════════ -->
+    <test name="Kiem Thu Dang Nhap - Auth Module">
+        <classes>
+            <class name="gearvault.tests.LoginTest"/>
+        </classes>
+    </test>
+
+    <!-- ════════════════════════════ -->
+    <!-- TEST 2: Kiểm tra Sản phẩm   -->
+    <!-- ════════════════════════════ -->
+    <test name="Kiem Thu San Pham - Product Module">
+        <classes>
+            <class name="gearvault.tests.ProductTest"/>
+        </classes>
+    </test>
+
+    <!-- ════════════════════════════ -->
+    <!-- TEST 3: Kiểm tra Giỏ hàng   -->
+    <!-- ════════════════════════════ -->
+    <!--
+    <test name="Kiem Thu Gio Hang - Cart Module">
+        <classes>
+            <class name="gearvault.tests.CartTest"/>
+        </classes>
+    </test>
+    -->
+
+    <!-- ════════════════════════════ -->
+    <!-- TEST 4: Kiểm tra Thanh toán -->
+    <!-- ════════════════════════════ -->
+    <!--
+    <test name="Kiem Thu Thanh Toan - Checkout Module">
+        <classes>
+            <class name="gearvault.tests.CheckoutTest"/>
+        </classes>
+    </test>
+    -->
+
+</suite>
