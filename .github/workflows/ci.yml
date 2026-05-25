@@ -1,136 +1,35 @@
-﻿name: GearVault CI Pipeline
+﻿name: GearVault Node.js CI Pipeline
 
-# Khi nào chạy?
 on:
   push:
-    branches: [ main ]          # Khi merge vào main
+    branches: [ main ]
   pull_request:
-    branches: [ main ]          # Khi tạo PR vào main
-  workflow_dispatch:             # Chạy thủ công khi cần
+    branches: [ main ]
 
 jobs:
-  # ══════════════════════════════════════
-  # JOB 1: Chạy Automation Test
-  # ══════════════════════════════════════
-  automation-test:
-    name: 🤖 Chạy Selenium Automation Test
-    runs-on: ubuntu-latest
-
-    steps:
-      # Bước 1: Lấy code về
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      # Bước 2: Cài Java 17
-      - name: ☕ Setup Java 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      # Bước 3: Cache Maven (tăng tốc lần sau)
-      - name: 📦 Cache Maven packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-
-      # Bước 4: Cài Chrome (để chạy Selenium)
-      - name: 🌐 Setup Chrome
-        uses: browser-actions/setup-chrome@v1
-
-      # Bước 5: Chạy Maven test (headless mode - không hiện cửa sổ)
-      - name: 🧪 Chạy Selenium Tests
-        working-directory: ./automation
-        run: |
-          mvn test \
-            -Dchrome.options=--headless \
-            -Dchrome.options=--no-sandbox \
-            -Dchrome.options=--disable-dev-shm-usage \
-            -Dtest.baseUrl=http://localhost:5173 \
-        continue-on-error: true   # Không dừng pipeline dù test fail
-
-      # Bước 6: Upload kết quả test (TestNG report)
-      - name: 📊 Upload Test Results
-        uses: actions/upload-artifact@v4
-        if: always()              # Luôn upload dù pass hay fail
-        with:
-          name: selenium-test-results
-          path: |
-            automation/test-output/
-            automation/target/surefire-reports/
-          retention-days: 14      # Giữ 14 ngày
-
-      # Bước 7: Hiện tóm tắt kết quả
-      - name: 📋 Tóm tắt kết quả test
-        if: always()
-        run: |
-          echo "## 🧪 Kết quả Automation Test" >> $GITHUB_STEP_SUMMARY
-          echo "| Thông tin | Giá trị |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----------|---------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Thời gian | $(date '+%Y-%m-%d %H:%M') |" >> $GITHUB_STEP_SUMMARY
-          echo "| Branch | ${{ github.ref_name }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Commit | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
-
-  # ══════════════════════════════════════
-  # JOB 2: Quét SonarCloud
-  # ══════════════════════════════════════
-  sonar-scan:
+  sonarcloud-scan:
     name: 🔍 Quét chất lượng code SonarCloud
     runs-on: ubuntu-latest
-    needs: automation-test        # Chạy sau job automation-test
 
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0          # Cần full history cho Sonar
+          fetch-depth: 0
 
-      - name: ☕ Setup Java 17
-        uses: actions/setup-java@v4
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          node-version: '18' # Hoặc phiên bản Node bạn đang dùng
 
-      - name: 📦 Cache SonarCloud packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
+      # Nếu bạn có viết test (Jest/Vitest), mở 2 dòng dưới ra để chạy test lấy Coverage
+      # - name: 📦 Install dependencies
+      #   run: npm install
+      # - name: 🧪 Run Tests
+      #   run: npm test
 
       - name: 🔍 Gửi code lên SonarCloud phân tích
-        working-directory: ./automation
+        uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          mvn verify sonar:sonar \
-            -Dsonar.projectKey=trantrongtri4869_KIEM-CHUNG-PHAN-MEM \
-            -Dsonar.organization=trantrongtri4869 \
-            -Dsonar.host.url=https://sonarcloud.io
-
-  # ══════════════════════════════════════
-  # JOB 3: Cập nhật Jira tự động
-  # ══════════════════════════════════════
-  update-jira:
-    name: 📋 Cập nhật Jira ticket
-    runs-on: ubuntu-latest
-    needs: automation-test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🔗 Kết nối Jira và chuyển ticket sang Done
-        uses: atlassian/gajira-transition@v3
-        with:
-          issue: ${{ env.JIRA_ISSUE }}
-          transition: "Done"
-        env:
-          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
-          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-        continue-on-error: true   # Không fail nếu Jira lỗi
