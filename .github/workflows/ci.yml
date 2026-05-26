@@ -66,7 +66,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  # JOB 4: TỰ ĐỘNG ĐỒNG BỘ TRẠNG THÁI SANG JIRA (ĐÃ CẬP NHẬT CHUẨN V3)
+  # JOB 4: TỰ ĐỘNG ĐỒNG BỘ TRẠNG THÁI SANG JIRA (CẤU TRÚC MỚI)
   jira-sync:
     name: 🔄 4. Sync Ticket Status to Jira
     runs-on: ubuntu-latest
@@ -77,7 +77,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🔑 Đăng nhập Atlassian Jira
-        uses: atlassian/gajira-login@v3
+        uses: atlassian/gajira-cli@v3
+        with:
+          action: login
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
@@ -85,13 +87,15 @@ jobs:
 
       - name: 🔎 Tìm mã số Ticket Jira từ Commit Message
         id: jira_issue
-        uses: atlassian/gajira-find-issue-action@v3
+        uses: atlassian/gajira-cli@v3
         with:
+          action: find-issue
           string: ${{ github.event.head_commit.message }}
 
       - name: ⏭️ Kéo Ticket sang cột DONE
         if: steps.jira_issue.outputs.issue != ''
-        uses: atlassian/gajira-transition@v3
+        uses: atlassian/gajira-cli@v3
         with:
+          action: transition-issue
           issue: ${{ steps.jira_issue.outputs.issue }}
           transition: "Done"
