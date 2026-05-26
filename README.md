@@ -2,7 +2,7 @@
 
 <div align="center">
 
-Một website thương mại điện tử đầy đủ tính năng dành cho thiết bị gaming
+- Một website thương mại điện tử đầy đủ tính năng dành cho thiết bị gaming
 
 Demo · Ảnh giao diện · Hướng dẫn chạy
 
