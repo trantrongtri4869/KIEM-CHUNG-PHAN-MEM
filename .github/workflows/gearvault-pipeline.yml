@@ -99,3 +99,4 @@ jobs:
           action: transition-issue
           issue: ${{ steps.jira_issue.outputs.issue }}
           transition: "Done"
+# Triggering a new run to wake up the pipeline
