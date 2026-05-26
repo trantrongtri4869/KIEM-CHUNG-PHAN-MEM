@@ -90,7 +90,7 @@ jobs:
         uses: atlassian/gajira-cli@v3
         with:
           action: find-issue
-          string: ${{ github.event.head_commit.message }}
+          string: "ci: force trigger new pipeline run for jira v3 sync KAN-2"
 
       - name: ⏭️ Kéo Ticket sang cột DONE
         if: steps.jira_issue.outputs.issue != ''
