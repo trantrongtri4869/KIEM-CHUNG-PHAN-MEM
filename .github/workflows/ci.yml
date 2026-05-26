@@ -99,5 +99,3 @@ jobs:
           action: transition-issue
           issue: ${{ steps.jira_issue.outputs.issue }}
           transition: "Done"
-
-# Absolute Brand New Pipeline Execution Trigger
