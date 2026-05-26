@@ -1,13 +1,13 @@
-﻿name: GearVault Total Integration CI Pipeline
+﻿name: GearVault Core CI/CD Suite
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  # 1. BUILD DỰ ÁN NODE.JS
-  build-node:
-    name: 🟢 1. Build Node.js Project
+  # JOB 1: BIÊN DỊCH VÀ CÀI ĐẶT THƯ VIỆN FRONTEND
+  build-frontend:
+    name: 🟢 1. Build Frontend Project
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout code
@@ -18,22 +18,19 @@ jobs:
         with:
           node-version: '18'
 
-      - name: 📦 Install Dependencies
+      - name: 📦 Install Frontend Dependencies
         run: |
-          if [ -f package.json ]; then
-            npm install
-          fi
+          cd gearvault/frontend
+          npm install
 
-  # 2. CHẠY AUTOMATION TEST MAVEN & PHÂN TÍCH SONARCLOUD
+  # JOB 2: CHẠY AUTOMATION TEST JAVAMAVEN
   automation-test:
-    name: 🧪 2. Run Selenium Tests & SonarCloud
+    name: 🧪 2. Run Automation TestNG Suite
     runs-on: ubuntu-latest
-    needs: build-node
+    needs: build-frontend
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: ☕ Setup Java 17
         uses: actions/setup-java@v4
@@ -42,26 +39,35 @@ jobs:
           java-version: '17'
           cache: 'maven'
 
-      # Chạy test mồi (Đã có file SampleTest nên bước này chắc chắn Xanh)
-      - name: 🧪 Biên dịch và Chạy Thử TestNG Suite
+      - name: 🧪 Execute Selenium Test Cases
         run: |
           cd automation
           mvn clean test
 
-      # Quét SonarCloud (Thêm cấu hình bỏ qua lỗi để không làm sập pipeline)
-      - name: 🔍 Phân tích chất lượng code với SonarCloud
-        continue-on-error: true
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          cd automation
-          mvn sonar:sonar -Dsonar.token=${{ secrets.SONAR_TOKEN }}
-
-  # 3. TỰ ĐỘNG ĐỒNG BỘ TRẠNG THÁI SANG JIRA
-  jira-sync:
-    name: 🔄 3. Sync Ticket Status to Jira
+  # JOB 3: PHÂN TÍCH CHẤT LƯỢNG CODE SỬ DỤNG FILE PROPERTIES CÓ SẴN
+  sonarcloud-scan:
+    name: 🔍 3. SonarCloud Comprehensive Scan
     runs-on: ubuntu-latest
     needs: automation-test
+    if: always() # Chạy quét độc lập từ thư mục gốc, dựa vào file sonar-project.properties có sẵn của bạn
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 Official SonarCloud Scan Action
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # JOB 4: TỰ ĐỘNG ĐỒNG BỘ TRẠNG THÁI SANG JIRA
+  jira-sync:
+    name: 🔄 4. Sync Ticket Status to Jira
+    runs-on: ubuntu-latest
+    needs: [build-frontend, automation-test]
+    if: always() # Bắt buộc luôn chạy bước này để tự động kéo thẻ Task sang DONE trên Kanban Board
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
