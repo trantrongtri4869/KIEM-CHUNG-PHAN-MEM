@@ -1,4 +1,4 @@
-﻿package com.gearvault;
+package com.gearvault;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -8,22 +8,20 @@ import java.net.URL;
 public class SampleTest {
 
     @Test
-    public void testGearVaultPipeline Connection() {
-        System.out.println("🟢 [GearVault-CI] Đang khởi chạy bộ kiểm thử hệ thống tự động...");
+    public void testGearVaultPipelineConnection() {
+        System.out.println("🟢 [GearVault-CI] Dang khoi chay bo kiem thu he thong tu dong...");
         try {
-            // Kiểm tra kết nối mạng của máy ảo thông qua một máy chủ tin cậy
             URL url = new URL("https://www.google.com");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.connect();
 
             int responseCode = connection.getResponseCode();
-            System.out.println("🟢 [GearVault-CI] Phản hồi từ máy chủ: " + responseCode);
+            System.out.println("🟢 [GearVault-CI] Phan hoi tu may chu: " + responseCode);
             
-            // Nếu phản hồi là 200 OK, chứng tỏ pipeline thông suốt
-            Assert.assertEquals(responseCode, 200, "Máy ảo Actions kết nối mạng thành công!");
+            Assert.assertEquals(responseCode, 200, "May ao Actions ket noi mang thanh cong!");
         } catch (Exception e) {
-            System.out.println("❌ [GearVault-CI] Lỗi kết nối: " + e.getMessage());
+            System.out.println("❌ [GearVault-CI] Loi ket noi: " + e.getMessage());
             Assert.fail(e.getMessage());
         }
     }
