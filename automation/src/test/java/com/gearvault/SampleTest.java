@@ -1,46 +1,30 @@
 ﻿package com.gearvault;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
+import org.testng.Assert;
 import org.testng.annotations.Test;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class SampleTest {
-    WebDriver driver;
-
-    @BeforeMethod
-    public void setUp() {
-        // Tự động quản lý và tải ChromeDriver
-        WebDriverManager.chromedriver().setup();
-        
-        // Cấu hình Chrome chạy ẩn (Headless) bắt buộc cho máy ảo GitHub Actions
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless");
-        options.addArguments("--disable-gpu");
-        options.addArguments("--no-sandbox");
-        options.addArguments("--disable-dev-shm-usage");
-        options.addArguments("--window-size=1920,1080");
-
-        driver = new ChromeDriver(options);
-    }
 
     @Test
-    public void testGearVaultPipeline() {
-        System.out.println("🟢 [GearVault] Đang kết nối thử nghiệm hệ thống...");
-        // Test thử truy cập một trang web public bất kỳ để đảm bảo mạng máy ảo thông suốt
-        driver.get("https://www.google.com");
-        String title = driver.getTitle();
-        System.out.println("🟢 [GearVault] Tiêu đề trang tải được: " + title);
-        assert title != null;
-    }
+    public void testGearVaultPipeline Connection() {
+        System.out.println("🟢 [GearVault-CI] Đang khởi chạy bộ kiểm thử hệ thống tự động...");
+        try {
+            // Kiểm tra kết nối mạng của máy ảo thông qua một máy chủ tin cậy
+            URL url = new URL("https://www.google.com");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.connect();
 
-    @AfterMethod
-    public void tearDown() {
-        if (driver != null) {
-            driver.quit();
+            int responseCode = connection.getResponseCode();
+            System.out.println("🟢 [GearVault-CI] Phản hồi từ máy chủ: " + responseCode);
+            
+            // Nếu phản hồi là 200 OK, chứng tỏ pipeline thông suốt
+            Assert.assertEquals(responseCode, 200, "Máy ảo Actions kết nối mạng thành công!");
+        } catch (Exception e) {
+            System.out.println("❌ [GearVault-CI] Lỗi kết nối: " + e.getMessage());
+            Assert.fail(e.getMessage());
         }
     }
 }
