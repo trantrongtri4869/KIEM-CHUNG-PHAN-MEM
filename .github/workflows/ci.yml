@@ -1,11 +1,11 @@
-﻿name: GearVault Core CI/CD Suite
+name: GearVault Core CI/CD Suite
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  # JOB 1: BIÊN DỊCH VÀ CÀI ĐẶT THƯ VIỆN FRONTEND (ĐÃ XANH)
+  # JOB 1: BIÊN DỊCH VÀ CÀI ĐẶT THƯ VIỆN FRONTEND
   build-frontend:
     name: 🟢 1. Build Frontend Project
     runs-on: ubuntu-latest
@@ -23,7 +23,7 @@ jobs:
           cd gearvault/frontend
           npm install
 
-  # JOB 2: CHẠY AUTOMATION TEST JAVAMAVEN (ĐÃ XANH)
+  # JOB 2: CHẠY AUTOMATION TEST JAVAMAVEN
   automation-test:
     name: 🧪 2. Run Automation TestNG Suite
     runs-on: ubuntu-latest
@@ -44,7 +44,7 @@ jobs:
           cd automation
           mvn clean test
 
-  # JOB 3: PHÂN TÍCH CHẤT LƯỢNG CODE TOÀN DIỆN (CẬP NHẬT ĐƯỜNG DẪN)
+  # JOB 3: PHÂN TÍCH CHẤT LƯỢNG CODE QUA SONARCLOUD
   sonarcloud-scan:
     name: 🔍 3. SonarCloud Comprehensive Scan
     runs-on: ubuntu-latest
@@ -65,7 +65,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  # JOB 4: TỰ ĐỘNG ĐỒNG BỘ TRẠNG THÁI SANG JIRA (SỬA LỖI REPOSITORY NOT FOUND)
+  # JOB 4: TỰ ĐỘNG ĐỒNG BỘ TRẠNG THÁI SANG JIRA (ĐÃ CẬP NHẬT TAG V3)
   jira-sync:
     name: 🔄 4. Sync Ticket Status to Jira
     runs-on: ubuntu-latest
