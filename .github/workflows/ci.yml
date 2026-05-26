@@ -5,51 +5,52 @@ on:
     branches: [ main ]
 
 jobs:
-  # JOB 1: BIÊN DỊCH VÀ CÀI ĐẶT THƯ VIỆN FRONTEND
-  build-frontend:
-    name: 🟢 1. Build Frontend Project
+  # GOM TOÀN BỘ QUY TRÌNH BUILD & TEST VÀO 1 MÔI TRƯỜNG ĐỂ CHIA SẺ HẠ TẦNG
+  build-and-test:
+    name: 🧪 1. Build Frontend & Run Automation Testing
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🟢 Setup Node.js
+      - name: 🟢 Setup Node.js (Frontend)
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      - name: 📦 Install Frontend Dependencies
-        run: |
-          cd gearvault/frontend
-          npm install
-
-  # JOB 2: CHẠY AUTOMATION TEST JAVAMAVEN
-  automation-test:
-    name: 🧪 2. Run Automation TestNG Suite
-    runs-on: ubuntu-latest
-    needs: build-frontend
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: ☕ Setup Java 17
+      - name: ☕ Setup Java 17 (Automation)
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
           cache: 'maven'
 
-      - name: 🧪 Execute Selenium Test Cases
+      - name: 🌐 Cài đặt trình duyệt Google Chrome thực tế cho Máy ảo
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: 📦 Cài đặt thư viện & Khởi động ngầm Website GearVault
+        run: |
+          cd gearvault/frontend
+          npm install
+          # Chạy ngầm website ở cổng 5173 và giải phóng dòng lệnh để chạy bước tiếp theo
+          npm run dev & 
+          echo "🟢 [CI] Đang chờ website khởi động trong 5 giây..."
+          sleep 5
+
+      # Bước chạy test quyết định (Đã có cả Chrome lẫn Website đang bật)
+      - name: 🧪 Biên dịch và Chạy Thử TestNG Suite
         run: |
           cd automation
           mvn clean test
 
-  # JOB 3: PHÂN TÍCH CHẤT LƯỢNG CODE SỬ DỤNG FILE PROPERTIES CÓ SẴN
+  # JOB 2: PHÂN TÍCH CHẤT LƯỢNG CODE
   sonarcloud-scan:
-    name: 🔍 3. SonarCloud Comprehensive Scan
+    name: 🔍 2. SonarCloud Comprehensive Scan
     runs-on: ubuntu-latest
-    needs: automation-test
-    if: always() # Chạy quét độc lập từ thư mục gốc, dựa vào file sonar-project.properties có sẵn của bạn
+    needs: build-and-test
+    if: always()
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
@@ -62,12 +63,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  # JOB 4: TỰ ĐỘNG ĐỒNG BỘ TRẠNG THÁI SANG JIRA
+  # JOB 3: TỰ ĐỘNG ĐỒNG BỘ TRẠNG THÁI SANG JIRA
   jira-sync:
-    name: 🔄 4. Sync Ticket Status to Jira
+    name: 🔄 3. Sync Ticket Status to Jira
     runs-on: ubuntu-latest
-    needs: [build-frontend, automation-test]
-    if: always() # Bắt buộc luôn chạy bước này để tự động kéo thẻ Task sang DONE trên Kanban Board
+    needs: build-and-test
+    if: always() # Bắt buộc LUÔN CHẠY để kéo thẻ Jira kể cả khi test có lỗi
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
