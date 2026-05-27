@@ -50,7 +50,7 @@ jobs:
         uses: actions/setup-java@v4
         with: { distribution: 'temurin', java-version: '17', cache: 'maven' }
 
-      # BẮT BUỘC: Compile tại đây để Sonar có file .class
+      # BẮT BUỘC: Compile tại đây
       - name: Build with Maven
         working-directory: ./automation
         run: mvn clean compile
@@ -62,7 +62,7 @@ jobs:
             -Dsonar.organization=trantrongtri4869
             -Dsonar.projectKey=trantrongtri4869_KIEM-CHUNG-PHAN-MEM
             -Dsonar.sources=gearvault/frontend/src,gearvault/backend/src,automation/src
-            -Dsonar.java.binaries=**/target/classes
+            -Dsonar.java.binaries=automation/target/classes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
