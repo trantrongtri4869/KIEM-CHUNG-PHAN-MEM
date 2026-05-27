@@ -50,10 +50,13 @@ jobs:
         uses: actions/setup-java@v4
         with: { distribution: 'temurin', java-version: '17', cache: 'maven' }
 
-      # Biên dịch để Sonar có file .class để quét
       - name: Build with Maven
         working-directory: ./automation
         run: mvn clean compile
+
+      # Bước kiểm tra mới: Giúp debug đường dẫn nếu Sonar vẫn lỗi
+      - name: Debug Path
+        run: find . -name "classes" -type d
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v3.0.0
@@ -62,7 +65,7 @@ jobs:
             -Dsonar.organization=trantrongtri4869
             -Dsonar.projectKey=trantrongtri4869_KIEM-CHUNG-PHAN-MEM
             -Dsonar.sources=gearvault/frontend/src,gearvault/backend/src,automation/src
-            -Dsonar.java.binaries=automation/target/classes,automation/target/test-classes
+            -Dsonar.java.binaries=**/target/classes,**/target/test-classes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
