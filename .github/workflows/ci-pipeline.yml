@@ -11,33 +11,37 @@ on:
 
 jobs:
 
-  # ════ BƯỚC 1: Build Frontend ════
+  # ════════════════════════════════════════
+  # BƯỚC 1: BUILD FRONTEND
+  # ════════════════════════════════════════
   build-frontend:
     name: 🌐 Build Frontend
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
 
       - name: Install Frontend Dependencies
-        run: |
-          cd gearvault/frontend
-          npm install
+        working-directory: ./gearvault/frontend
+        run: npm install
 
       - name: Build Frontend
-        run: |
-          cd gearvault/frontend
-          npm run build
+        working-directory: ./gearvault/frontend
+        run: npm run build
         continue-on-error: true
 
 
-  # ════ BƯỚC 2: Run Selenium TestNG ════
+  # ════════════════════════════════════════
+  # BƯỚC 2: RUN TESTNG + JACOCO
+  # ════════════════════════════════════════
   run-testng:
-    name: 🧪 Run TestNG
+    name: 🧪 Run Selenium TestNG
     runs-on: ubuntu-latest
     needs: build-frontend
 
@@ -45,22 +49,37 @@ jobs:
       result: ${{ job.status }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
           cache: 'maven'
 
-      - name: Run TestNG
+      - name: Run TestNG Tests
         working-directory: ./automation
         run: |
-          mvn test -Dchrome.headless=true -Dtest.baseUrl=http://localhost:5173
+          mvn clean test \
+            -Dchrome.headless=true \
+            -Dtest.baseUrl=http://localhost:5173
         continue-on-error: true
 
+      - name: Verify JaCoCo Report
+        working-directory: ./automation
+        run: |
+          echo "===== TARGET STRUCTURE ====="
+          ls -R target || true
 
-  # ════ BƯỚC 3: SonarCloud Scan ════
+          echo "===== JACOCO REPORT ====="
+          ls -R target/site/jacoco || true
+
+
+  # ════════════════════════════════════════
+  # BƯỚC 3: SONARCLOUD SCAN
+  # ════════════════════════════════════════
   sonarcloud-scan:
     name: 🔍 SonarCloud Scan
     runs-on: ubuntu-latest
@@ -73,7 +92,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 17
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -83,61 +102,285 @@ jobs:
       - name: Build Automation Project
         working-directory: ./automation
         run: |
-          mvn clean test-compile
+          mvn clean test
 
       - name: Verify Generated Classes
         working-directory: ./automation
         run: |
           echo "===== TARGET STRUCTURE ====="
-          ls -R target
+          ls -R target || true
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v3.0.0
 
         with:
           projectBaseDir: ./automation
+
           args: >
             -Dsonar.organization=trantrongtri4869
             -Dsonar.projectKey=trantrongtri4869_KIEM-CHUNG-PHAN-MEM
             -Dsonar.sources=src/test/java
             -Dsonar.java.binaries=target/test-classes
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
 
-  # ════ BƯỚC 4: Jira Sync ════
+  # ════════════════════════════════════════
+  # BƯỚC 4: JIRA SYNC ADVANCED
+  # ════════════════════════════════════════
   jira-sync:
     name: 📋 Jira Sync
     runs-on: ubuntu-latest
-    needs: run-testng
+
+    needs:
+      - run-testng
+      - sonarcloud-scan
+
     if: always()
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
+
+      # ─────────────────────────────
+      # 4A - Extract Jira Ticket ID
+      # ─────────────────────────────
       - name: Extract Jira Ticket ID
         id: extract_jira
+        shell: bash
+
         run: |
-          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+
+          echo "Commit message:"
+          echo "$COMMIT_MSG"
+
           JIRA_ID=$(echo "$COMMIT_MSG" | grep -oP '\[KAN-\d+\]' | tr -d '[]' | head -1)
 
-          echo "jira_id=$JIRA_ID" >> $GITHUB_OUTPUT
-          echo "found=$([ -n "$JIRA_ID" ] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
+          if [ -n "$JIRA_ID" ]; then
+            echo "jira_id=$JIRA_ID" >> $GITHUB_OUTPUT
+            echo "found=true" >> $GITHUB_OUTPUT
+            echo "Found Jira ID: $JIRA_ID"
+          else
+            echo "found=false" >> $GITHUB_OUTPUT
+            echo "No Jira ID found"
+          fi
 
+
+      # ─────────────────────────────
+      # 4B - Comment To Jira Ticket
+      # ─────────────────────────────
       - name: Update Jira Ticket
         if: steps.extract_jira.outputs.found == 'true'
-        run: |
-          curl -s -X POST "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ steps.extract_jira.outputs.jira_id }}/comment" \
-            -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d '{"body":{"type":"doc","version":1,"content":[{"type":"paragraph","content":[{"type":"text","text":"🤖 CI Pipeline chạy xong! Kết quả: ${{ needs.run-testng.result }}"}]}]}}'
+        shell: bash
 
-      - name: Create Jira Bug Ticket When Test Fail
-        if: needs.run-testng.result == 'failure'
         run: |
-          curl -s -X POST "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue" \
+
+          JIRA_ID="${{ steps.extract_jira.outputs.jira_id }}"
+
+          COMMENT=$(cat <<EOF
+{
+  "body": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "🤖 GitHub Actions CI/CD pipeline completed."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "✅ Frontend Build Completed"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "✅ TestNG Executed"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "✅ SonarCloud Scan Completed"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Branch: ${{ github.ref_name }}"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Commit: ${{ github.sha }}"
+          }
+        ]
+      }
+    ]
+  }
+}
+EOF
+)
+
+          curl -s -X POST \
+            "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/$JIRA_ID/comment" \
             -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '{"fields":{"project":{"key":"KAN"},"summary":"[AUTO-BUG] CI Pipeline Failed","issuetype":{"name":"Bug"}}}'
+            -d "$COMMENT"
+
+
+      # ─────────────────────────────
+      # 4C - Move Ticket To Done
+      # ─────────────────────────────
+      - name: Move Jira Ticket To Done
+        if: |
+          steps.extract_jira.outputs.found == 'true' &&
+          needs.run-testng.result == 'success'
+
+        shell: bash
+
+        run: |
+
+          JIRA_ID="${{ steps.extract_jira.outputs.jira_id }}"
+
+          curl -s -X GET \
+            "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/$JIRA_ID/transitions" \
+            -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -o transitions.json
+
+          DONE_ID=$(python3 - <<EOF
+import json
+
+with open("transitions.json", "r") as f:
+    data = json.load(f)
+
+for t in data.get("transitions", []):
+    if t["name"].lower() in ["done", "closed", "complete"]:
+        print(t["id"])
+        break
+EOF
+)
+
+          if [ -n "$DONE_ID" ]; then
+
+            curl -s -X POST \
+              "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/$JIRA_ID/transitions" \
+              -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d "{\"transition\":{\"id\":\"$DONE_ID\"}}"
+
+            echo "Moved ticket to Done"
+
+          else
+            echo "No Done transition found"
+          fi
+
+
+      # ─────────────────────────────
+      # 4D - Auto Create Bug Ticket
+      # ─────────────────────────────
+      - name: Create Bug Ticket When Tests Fail
+        if: needs.run-testng.result == 'failure'
+
+        shell: bash
+
+        run: |
+
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          BUG_JSON=$(cat <<EOF
+{
+  "fields": {
+    "project": {
+      "key": "KAN"
+    },
+    "summary": "[AUTO-BUG] CI Pipeline Failed",
+    "issuetype": {
+      "name": "Bug"
+    },
+    "priority": {
+      "name": "High"
+    },
+    "labels": [
+      "auto-created",
+      "ci-failure"
+    ],
+    "description": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "GitHub Actions pipeline failed."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "$RUN_URL"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+EOF
+)
+
+          curl -s -X POST \
+            "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue" \
+            -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "$BUG_JSON"
+
+
+      # ─────────────────────────────
+      # 4E - Workflow Summary
+      # ─────────────────────────────
+      - name: Jira Summary
+        if: always()
+
+        run: |
+
+          echo "## 📋 Jira Sync Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Jira ID | ${{ steps.extract_jira.outputs.jira_id || 'None' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Result | ${{ needs.run-testng.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Sonar Result | ${{ needs.sonarcloud-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch | ${{ github.ref_name }} |" >> $GITHUB_STEP_SUMMARY
