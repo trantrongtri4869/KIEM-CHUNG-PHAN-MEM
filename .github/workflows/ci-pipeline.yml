@@ -93,12 +93,13 @@ jobs:
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v3.0.0
+
         with:
           projectBaseDir: ./automation
           args: >
             -Dsonar.organization=trantrongtri4869
             -Dsonar.projectKey=trantrongtri4869_KIEM-CHUNG-PHAN-MEM
-            -Dsonar.tests=src/test/java
+            -Dsonar.sources=src/test/java
             -Dsonar.java.binaries=target/test-classes
 
         env:
