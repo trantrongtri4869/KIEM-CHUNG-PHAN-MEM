@@ -45,17 +45,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
-      - uses: SonarSource/sonarcloud-github-action@v3.0.0
+      
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with: { distribution: 'temurin', java-version: '17', cache: 'maven' }
+
+      # BẮT BUỘC: Compile tại đây để Sonar có file .class
+      - name: Build with Maven
+        working-directory: ./automation
+        run: mvn clean compile
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v3.0.0
         with:
           args: >
             -Dsonar.organization=trantrongtri4869
             -Dsonar.projectKey=trantrongtri4869_KIEM-CHUNG-PHAN-MEM
             -Dsonar.sources=gearvault/frontend/src,gearvault/backend/src,automation/src
+            -Dsonar.java.binaries=**/target/classes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  # ════ BƯỚC 4: Jira Sync (Tích hợp logic tự động hóa) ════
+  # ════ BƯỚC 4: Jira Sync ════
   jira-sync:
     name: 📋 Jira Sync
     runs-on: ubuntu-latest
@@ -63,8 +75,6 @@ jobs:
     if: always()
     steps:
       - uses: actions/checkout@v4
-      
-      # 1. Trích xuất mã [KAN-XXX] từ commit message
       - name: Trich xuat Jira Ticket ID
         id: extract_jira
         run: |
@@ -72,8 +82,7 @@ jobs:
           JIRA_ID=$(echo "$COMMIT_MSG" | grep -oP '\[KAN-\d+\]' | tr -d '[]' | head -1)
           echo "jira_id=$JIRA_ID" >> $GITHUB_OUTPUT
           echo "found=$([ -n "$JIRA_ID" ] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
-
-      # 2. Cập nhật comment vào Jira nếu tìm thấy ticket
+      
       - name: Cap nhat Jira ticket
         if: steps.extract_jira.outputs.found == 'true'
         run: |
@@ -82,14 +91,6 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"body": {"type": "doc", "version": 1, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "🤖 CI Pipeline chạy xong! Kết quả: ${{ needs.run-testng.result }}"}]}]}}'
 
-      # 3. Chuyển trạng thái sang Done nếu Test thành công
-      - name: Chuyen Jira sang Done
-        if: steps.extract_jira.outputs.found == 'true' && needs.run-testng.result == 'success'
-        run: |
-          # Gọi API chuyển trạng thái (cần cấu hình ID transition tương ứng trên Jira của bạn)
-          echo "Chuyển trạng thái ticket ${{ steps.extract_jira.outputs.jira_id }} sang Done"
-
-      # 4. Tự động tạo Bug nếu Test thất bại
       - name: Tao Bug ticket tren Jira khi Test Fail
         if: needs.run-testng.result == 'failure'
         run: |
