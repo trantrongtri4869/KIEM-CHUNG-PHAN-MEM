@@ -1,0 +1,331 @@
+# PHÂN TÍCH YÊU CẦU KIỂM THỬ HỆ THỐNG GEARVAULT 
+
+---
+
+# 1. Giới thiệu dự án
+
+GearVault là một website thương mại điện tử chuyên bán các thiết bị gaming như chuột, bàn phím, tai nghe và phụ kiện gaming. Hệ thống được xây dựng theo mô hình Full-stack sử dụng React, Node.js, Express và MongoDB.
+
+Dự án được phát triển nhằm mục đích:
+
+* Thực hành phát triển phần mềm Full-stack
+* Thực hành kiểm thử phần mềm
+* Xây dựng portfolio cá nhân
+* Áp dụng quy trình làm việc nhóm với GitHub và Jira
+
+---
+
+# 2. Mục tiêu kiểm thử
+
+Mục tiêu của quá trình kiểm thử là:
+
+* Đảm bảo các chức năng của hệ thống hoạt động đúng theo yêu cầu.
+* Đảm bảo giao diện hiển thị chính xác trên nhiều thiết bị.
+* Đảm bảo dữ liệu được xử lý chính xác.
+* Đảm bảo hệ thống validation hoạt động đúng.
+* Đảm bảo các chức năng phân quyền hoạt động chính xác.
+* Giảm thiểu lỗi trước khi triển khai sản phẩm.
+
+---
+
+# 3. Phạm vi kiểm thử
+
+## 3.1 Chức năng nằm trong phạm vi kiểm thử
+
+### Chức năng mua sắm
+
+* Hiển thị danh sách sản phẩm
+* Tìm kiếm sản phẩm
+* Lọc sản phẩm
+* Sắp xếp sản phẩm
+* Xem chi tiết sản phẩm
+* Thêm vào giỏ hàng
+* Áp dụng mã giảm giá
+* Wishlist
+
+### Chức năng thanh toán
+
+* Quy trình checkout
+* Validation form
+* Xử lý đơn hàng
+* Xác nhận đơn hàng
+
+### Chức năng xác thực
+
+* Đăng ký
+* Đăng nhập
+* Đăng xuất
+* JWT Authentication
+* Protected Route
+
+### Dashboard người dùng
+
+* Quản lý thông tin cá nhân
+* Lịch sử đơn hàng
+* Wishlist
+* Cài đặt tài khoản
+
+### Dashboard quản trị viên
+
+* Quản lý sản phẩm
+* Quản lý đơn hàng
+* Quản lý người dùng
+* Thống kê doanh thu
+
+### UI/UX
+
+* Responsive
+* Dark mode / Light mode
+* Animation
+* Toast notification
+* Trang 404
+
+---
+
+## 3.2 Chức năng không nằm trong phạm vi kiểm thử
+
+* Kiểm thử chịu tải chuyên sâu
+* Penetration Testing chuyên nghiệp
+* Kiểm thử hệ thống thanh toán thật
+* Triển khai production thực tế
+
+---
+
+# 4. Công nghệ sử dụng
+
+## Frontend
+
+* React 18
+* TypeScript
+* Vite
+* TailwindCSS
+* Zustand
+* React Router DOM
+
+## Backend
+
+* Node.js
+* Express.js
+* MongoDB
+* Mongoose
+* JWT Authentication
+
+## Testing
+
+* Vitest
+* React Testing Library
+* Cypress
+
+---
+
+# 5. Phân tích module chức năng
+
+## 5.1 Module Authentication
+
+### Chức năng
+
+* Đăng ký tài khoản
+* Đăng nhập
+* Đăng xuất
+* Lưu trạng thái đăng nhập
+* Phân quyền người dùng
+
+### Các trường hợp cần kiểm thử
+
+* Đăng nhập thành công
+* Đăng nhập sai mật khẩu
+* Đăng nhập thiếu dữ liệu
+* Validation email
+* Validation password
+* Truy cập route bị bảo vệ khi chưa đăng nhập
+* Token hết hạn
+* Logout
+
+---
+
+## 5.2 Module Product
+
+### Chức năng
+
+* Hiển thị sản phẩm
+* Tìm kiếm sản phẩm
+* Lọc sản phẩm
+* Sắp xếp sản phẩm
+* Xem chi tiết sản phẩm
+
+### Các trường hợp cần kiểm thử
+
+* Hiển thị đúng danh sách sản phẩm
+* Search hoạt động chính xác
+* Filter theo category
+* Filter theo brand
+* Sort theo giá
+* Sort theo rating
+* Xem chi tiết sản phẩm
+* Xử lý sản phẩm không tồn tại
+
+---
+
+## 5.3 Module Cart
+
+### Chức năng
+
+* Thêm sản phẩm vào giỏ hàng
+* Xóa sản phẩm
+* Cập nhật số lượng
+* Áp dụng coupon
+
+### Các trường hợp cần kiểm thử
+
+* Add cart thành công
+* Xóa sản phẩm khỏi cart
+* Update quantity
+* Quantity âm
+* Quantity vượt stock
+* Coupon hợp lệ
+* Coupon không hợp lệ
+* Cart rỗng
+
+---
+
+## 5.4 Module Checkout
+
+### Chức năng
+
+* Nhập thông tin giao hàng
+* Chọn phương thức thanh toán
+* Xác nhận đơn hàng
+
+### Các trường hợp cần kiểm thử
+
+* Checkout thành công
+* Validation form
+* Thiếu thông tin
+* Payment method
+* Xác nhận đơn hàng
+* Tạo order ID
+
+---
+
+## 5.5 Module User Dashboard
+
+### Chức năng
+
+* Quản lý profile
+* Xem lịch sử đơn hàng
+* Wishlist
+* Cài đặt tài khoản
+
+### Các trường hợp cần kiểm thử
+
+* Update profile
+* Hiển thị order history
+* Xem wishlist
+* Chỉnh sửa thông tin
+
+---
+
+## 5.6 Module Admin Dashboard
+
+### Chức năng
+
+* CRUD sản phẩm
+* Quản lý người dùng
+* Quản lý đơn hàng
+* Dashboard thống kê
+
+### Các trường hợp cần kiểm thử
+
+* Tạo sản phẩm
+* Chỉnh sửa sản phẩm
+* Xóa sản phẩm
+* Phân quyền admin
+* Quản lý user
+* Cập nhật trạng thái đơn hàng
+
+---
+
+# 6. Các loại kiểm thử áp dụng
+
+## Functional Testing
+
+Kiểm tra chức năng hệ thống hoạt động đúng yêu cầu.
+
+## UI Testing
+
+Kiểm tra giao diện hiển thị đúng.
+
+## Validation Testing
+
+Kiểm tra dữ liệu nhập hợp lệ và không hợp lệ.
+
+## Responsive Testing
+
+Kiểm tra hiển thị trên:
+
+* Desktop
+* Tablet
+* Mobile
+
+## Security Testing cơ bản
+
+* JWT Authentication
+* Protected Route
+* Phân quyền
+* Validation input
+
+## API Testing
+
+Kiểm tra các endpoint API hoạt động đúng.
+
+---
+
+# 7. Rủi ro dự kiến
+
+* Lỗi validation form
+* Lỗi phân quyền
+* Sai dữ liệu giỏ hàng
+* Sai tính toán giảm giá
+* Responsive lỗi trên mobile
+* API trả dữ liệu không đúng
+* Token hết hạn không xử lý đúng
+
+---
+
+# 8. Môi trường kiểm thử
+
+## Trình duyệt
+
+* Google Chrome
+* Microsoft Edge
+* Firefox
+
+## Thiết bị
+
+* Desktop
+* Tablet
+* Mobile
+
+## Hệ điều hành
+
+* Windows 10/11
+
+---
+
+# 9. Phân chia module kiểm thử cho nhóm
+
+| Thành viên   | Module                |
+| ------------ | --------------------- |
+| Leader       | Review + Tổng hợp     |
+| Thành viên 1 | Authentication        |
+| Thành viên 2 | Product               |
+| Thành viên 3 | Cart                  |
+| Thành viên 4 | Checkout              |
+| Thành viên 5 | User Dashboard        |
+| Thành viên 6 | Admin Dashboard + API |
+
+---
+
+# 10. Kết luận
+
+Tài liệu phân tích yêu cầu giúp xác định phạm vi kiểm thử, các chức năng cần kiểm tra và hỗ trợ quá trình phân chia công việc trong nhóm. Đây là cơ sở để xây dựng test case, thực hiện kiểm thử và ghi nhận lỗi trong quá trình phát triển dự án GearVault.

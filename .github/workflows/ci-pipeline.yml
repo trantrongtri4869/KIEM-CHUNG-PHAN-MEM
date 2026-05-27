@@ -1,0 +1,120 @@
+name: GearVault Ultimate CI/CD Suite
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  # 1. BUILD FRONTEND
+  build-frontend:
+    name: 🌐 Build Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install & Build
+        working-directory: ./gearvault/frontend
+        run: |
+          npm install
+          npm run build
+
+  # 2. RUN TESTNG + JACOCO (Lưu kết quả vào Artifacts)
+  run-testng:
+    name: 🧪 Run Selenium TestNG
+    runs-on: ubuntu-latest
+    needs: build-frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - name: Run Tests
+        working-directory: ./automation
+        run: |
+          mvn clean verify -Dchrome.headless=true -Dtest.baseUrl=http://localhost:5173
+        continue-on-error: true
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: automation/target/
+
+  # 3. SONARCLOUD SCAN (Dùng lại Artifacts, không build lại)
+  sonarcloud-scan:
+    name: 🔍 SonarCloud Scan
+    runs-on: ubuntu-latest
+    needs: run-testng
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download Test Results
+        uses: actions/download-artifact@v4
+        with:
+          name: test-reports
+          path: automation/target/
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v3.0.0
+        with:
+          projectBaseDir: ./automation
+          args: >
+            -Dsonar.organization=trantrongtri4869
+            -Dsonar.projectKey=trantrongtri4869_KIEM-CHUNG-PHAN-MEM
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # 4. JIRA SYNC (Với cơ chế chặn nếu thiếu ID)
+  jira-sync:
+    name: 📋 Jira Sync
+    runs-on: ubuntu-latest
+    needs: [run-testng, sonarcloud-scan]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate & Extract Jira ID
+        id: extract_jira
+        shell: bash
+        run: |
+          MSG=$(git log -1 --pretty=%B)
+          JIRA_ID=$(echo "$MSG" | grep -oP 'KAN-\d+' | head -1)
+          if [ -z "$JIRA_ID" ]; then
+            echo "::error::COMMIT THIẾU ID JIRA! Vui lòng đặt tên commit dạng [KAN-123]"
+            exit 1
+          fi
+          echo "jira_id=$JIRA_ID" >> $GITHUB_OUTPUT
+          echo "found=true" >> $GITHUB_OUTPUT
+
+      - name: Update Jira Ticket
+        if: success()
+        run: |
+          curl -s -X POST "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ steps.extract_jira.outputs.jira_id }}/comment" \
+            -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"body": {"type": "doc", "version": 1, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "🤖 CI/CD Pipeline Success."}]}]}}'
+
+      - name: Create Bug Ticket on Failure
+        if: needs.run-testng.result == 'failure'
+        run: |
+          curl -s -X POST "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue" \
+            -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"fields": {"project": {"key": "KAN"}, "summary": "[AUTO-BUG] Test Failed", "issuetype": {"name": "Bug"}}}'
+
+      - name: Jira Summary
+        if: always()
+        run: |
+          echo "## 📋 Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | Job |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| ${{ needs.run-testng.result }} | TestNG |" >> $GITHUB_STEP_SUMMARY
+          echo "| ${{ needs.sonarcloud-scan.result }} | SonarCloud |" >> $GITHUB_STEP_SUMMARY

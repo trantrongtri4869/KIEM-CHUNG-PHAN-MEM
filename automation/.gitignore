@@ -1,0 +1,17 @@
+# Thư mục Maven build (tự sinh ra khi chạy mvn)
+target/
+
+# File IDE
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# File hệ điều hành
+.DS_Store
+Thumbs.db
+
+# Báo cáo test (tự sinh ra khi chạy)
+test-output/
+reports/
