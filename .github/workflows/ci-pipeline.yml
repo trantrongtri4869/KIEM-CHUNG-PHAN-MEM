@@ -66,12 +66,11 @@ jobs:
           args: >
             -Dsonar.organization=trantrongtri4869
             -Dsonar.projectKey=trantrongtri4869_KIEM-CHUNG-PHAN-MEM
-            -Dsonar.sources=gearvault/frontend/src,gearvault/backend/src,automation/src
-            -Dsonar.java.binaries=**/target/classes,**/target/test-classes
+            -Dsonar.sources=automation/src/test/java
+            -Dsonar.java.binaries=automation/target/test-classes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
   # ════ BƯỚC 4: Jira Sync ════
   jira-sync:
     name: 📋 Jira Sync
