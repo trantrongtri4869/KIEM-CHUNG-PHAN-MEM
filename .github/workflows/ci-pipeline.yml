@@ -179,94 +179,40 @@ jobs:
         shell: bash
 
         run: |
-
           JIRA_ID="${{ steps.extract_jira.outputs.jira_id }}"
-
-          COMMENT=$(cat <<EOF
-{
-  "body": {
-    "type": "doc",
-    "version": 1,
-    "content": [
-      {
-        "type": "paragraph",
-        "content": [
-          {
-            "type": "text",
-            "text": "🤖 GitHub Actions CI/CD pipeline completed."
-          }
-        ]
-      },
-      {
-        "type": "paragraph",
-        "content": [
-          {
-            "type": "text",
-            "text": "✅ Frontend Build Completed"
-          }
-        ]
-      },
-      {
-        "type": "paragraph",
-        "content": [
-          {
-            "type": "text",
-            "text": "✅ TestNG Executed"
-          }
-        ]
-      },
-      {
-        "type": "paragraph",
-        "content": [
-          {
-            "type": "text",
-            "text": "✅ SonarCloud Scan Completed"
-          }
-        ]
-      },
-      {
-        "type": "paragraph",
-        "content": [
-          {
-            "type": "text",
-            "text": "Branch: ${{ github.ref_name }}"
-          }
-        ]
-      },
-      {
-        "type": "paragraph",
-        "content": [
-          {
-            "type": "text",
-            "text": "Commit: ${{ github.sha }}"
-          }
-        ]
-      }
-    ]
-  }
-}
-EOF
-)
 
           curl -s -X POST \
             "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/$JIRA_ID/comment" \
             -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d "$COMMENT"
+            -d '{
+              "body": {
+                "type": "doc",
+                "version": 1,
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "🤖 GitHub Actions CI/CD pipeline completed."
+                      }
+                    ]
+                  }
+                ]
+              }
+            }'
 
 
       # ─────────────────────────────
       # 4C - Move Ticket To Done
       # ─────────────────────────────
       - name: Move Jira Ticket To Done
-        if: |
-          steps.extract_jira.outputs.found == 'true' &&
-          needs.run-testng.result == 'success'
+        if: steps.extract_jira.outputs.found == 'true' && needs.run-testng.result == 'success'
 
         shell: bash
 
         run: |
-
           JIRA_ID="${{ steps.extract_jira.outputs.jira_id }}"
 
           curl -s -X GET \
@@ -312,60 +258,30 @@ EOF
         shell: bash
 
         run: |
-
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
-          BUG_JSON=$(cat <<EOF
-{
-  "fields": {
-    "project": {
-      "key": "KAN"
-    },
-    "summary": "[AUTO-BUG] CI Pipeline Failed",
-    "issuetype": {
-      "name": "Bug"
-    },
-    "priority": {
-      "name": "High"
-    },
-    "labels": [
-      "auto-created",
-      "ci-failure"
-    ],
-    "description": {
-      "type": "doc",
-      "version": 1,
-      "content": [
-        {
-          "type": "paragraph",
-          "content": [
-            {
-              "type": "text",
-              "text": "GitHub Actions pipeline failed."
-            }
-          ]
-        },
-        {
-          "type": "paragraph",
-          "content": [
-            {
-              "type": "text",
-              "text": "$RUN_URL"
-            }
-          ]
-        }
-      ]
-    }
-  }
-}
-EOF
-)
 
           curl -s -X POST \
             "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue" \
             -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d "$BUG_JSON"
+            -d "{
+              \"fields\": {
+                \"project\": {
+                  \"key\": \"KAN\"
+                },
+                \"summary\": \"[AUTO-BUG] CI Pipeline Failed\",
+                \"issuetype\": {
+                  \"name\": \"Bug\"
+                },
+                \"priority\": {
+                  \"name\": \"High\"
+                },
+                \"labels\": [
+                  \"auto-created\",
+                  \"ci-failure\"
+                ]
+              }
+            }"
 
 
       # ─────────────────────────────
@@ -375,12 +291,11 @@ EOF
         if: always()
 
         run: |
-
           echo "## 📋 Jira Sync Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Jira ID | ${{ steps.extract_jira.outputs.jira_id || 'None' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Jira ID | ${{ steps.extract_jira.outputs.jira_id }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Test Result | ${{ needs.run-testng.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Sonar Result | ${{ needs.sonarcloud-scan.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Branch | ${{ github.ref_name }} |" >> $GITHUB_STEP_SUMMARY
