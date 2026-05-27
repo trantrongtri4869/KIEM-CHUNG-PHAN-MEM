@@ -53,6 +53,8 @@ jobs:
       - name: Build with Maven
         working-directory: ./automation
         run: mvn clean compile
+      - name: Debug Full Structure
+        run: ls -R automation/target
 
       # Bước kiểm tra mới: Giúp debug đường dẫn nếu Sonar vẫn lỗi
       - name: Debug Path
