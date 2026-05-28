@@ -129,13 +129,11 @@ jobs:
         working-directory: ./gearvault/backend
         run: |
           npm install
-          # Tạo .env tối thiểu để server khởi động
           echo "PORT=5000" > .env
           echo "MONGO_URI=mongodb://localhost:27017/gearvault_test" >> .env
           echo "JWT_SECRET=ci_test_secret_key" >> .env
           echo "NODE_ENV=test" >> .env
           npm start &
-          # Đợi server khởi động
           sleep 10
         continue-on-error: true
 
@@ -269,10 +267,9 @@ jobs:
             -Dsonar.organization=trantrongtri4869
             -Dsonar.projectKey=trantrongtri4869_KIEM-CHUNG-PHAN-MEM
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-            -Dsonar.java.binaries=target/classes
-            -Dsonar.java.test.binaries=target/test-classes
-            -Dsonar.sources=src/main
-            -Dsonar.tests=src/test
+            -Dsonar.java.binaries=target/test-classes
+            -Dsonar.sources=src/test/java
+            -Dsonar.exclusions=**/*.xml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -289,7 +286,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Extract Jira ID từ commit message (Flk → Convert ID-Task)
       - name: Extract Jira ID
         id: extract_jira
         shell: bash
@@ -306,7 +302,6 @@ jobs:
             echo "⚠️ No Jira ID found in commit message"
           fi
 
-      # Xác định trạng thái pipeline để log vào Jira
       - name: Determine Pipeline Status
         id: pipeline_status
         shell: bash
@@ -328,7 +323,6 @@ jobs:
           echo "status=$STATUS" >> $GITHUB_OUTPUT
           echo "emoji=$EMOJI" >> $GITHUB_OUTPUT
 
-      # Log Jira — comment chi tiết lên ticket
       - name: Log to Jira (TSF Module → Log Jira)
         if: steps.extract_jira.outputs.found == 'true'
         run: |
@@ -353,7 +347,6 @@ jobs:
             }"
           echo "✅ Logged to Jira ticket ${{ steps.extract_jira.outputs.jira_id }}"
 
-      # Pipeline Summary
       - name: Pipeline Summary
         if: always()
         run: |
