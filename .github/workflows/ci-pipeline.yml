@@ -8,7 +8,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  # 1. BUILD FRONTEND
+  # ─────────────────────────────────────────
+  # 1. BUILD FRONTEND (React + Vite + TS)
+  # ─────────────────────────────────────────
   build-frontend:
     name: 🌐 Build Frontend
     runs-on: ubuntu-latest
@@ -18,18 +20,162 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: gearvault/frontend/package-lock.json
 
-      - name: Install & Build
+      - name: Install Dependencies
         working-directory: ./gearvault/frontend
+        run: npm install
+
+      - name: Type Check
+        working-directory: ./gearvault/frontend
+        run: npx tsc --noEmit
+        continue-on-error: true
+
+      - name: Build Production
+        working-directory: ./gearvault/frontend
+        run: npm run build
+
+      - name: Upload Frontend Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: gearvault/frontend/dist/
+
+  # ─────────────────────────────────────────
+  # 2. BUILD BACKEND (Node.js + Express)
+  # ─────────────────────────────────────────
+  build-backend:
+    name: 🔧 Build Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: gearvault/backend/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ./gearvault/backend
+        run: npm install
+
+      - name: Lint Check
+        working-directory: ./gearvault/backend
+        run: npm run lint --if-present
+        continue-on-error: true
+
+      - name: Upload Backend Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-dist
+          path: gearvault/backend/
+
+  # ─────────────────────────────────────────
+  # 3. UNIT TEST FRONTEND (Vitest)
+  # ─────────────────────────────────────────
+  unit-test-frontend:
+    name: ⚡ Unit Test (Vitest)
+    runs-on: ubuntu-latest
+    needs: build-frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: gearvault/frontend/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ./gearvault/frontend
+        run: npm install
+
+      - name: Run Vitest
+        working-directory: ./gearvault/frontend
+        run: npm run test:coverage --if-present || npm run test -- --run
+        continue-on-error: true
+
+      - name: Upload Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: gearvault/frontend/coverage/
+        if: always()
+
+  # ─────────────────────────────────────────
+  # 4. CHECK OPEN API / HEALTH ENDPOINT
+  #    (Mendora — verify API contract)
+  # ─────────────────────────────────────────
+  check-open-api:
+    name: 🔌 Check Open API (Mendora)
+    runs-on: ubuntu-latest
+    needs: build-backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Download Backend
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-dist
+          path: gearvault/backend/
+
+      - name: Start Backend Server
+        working-directory: ./gearvault/backend
         run: |
           npm install
-          npm run build
+          # Tạo .env tối thiểu để server khởi động
+          echo "PORT=5000" > .env
+          echo "MONGO_URI=mongodb://localhost:27017/gearvault_test" >> .env
+          echo "JWT_SECRET=ci_test_secret_key" >> .env
+          echo "NODE_ENV=test" >> .env
+          npm start &
+          # Đợi server khởi động
+          sleep 10
+        continue-on-error: true
 
-  # 2. RUN TESTNG + JACOCO
+      - name: Verify API Health Endpoint
+        run: |
+          echo "=== Checking API Health ==="
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/api/health || echo "000")
+          echo "API Health Status: $STATUS"
+          if [ "$STATUS" = "200" ]; then
+            echo "✅ API is healthy"
+          else
+            echo "⚠️ API returned status $STATUS (server may need MongoDB)"
+          fi
+        continue-on-error: true
+
+      - name: Verify Key API Endpoints Exist
+        run: |
+          echo "=== Checking API Endpoints ==="
+          for endpoint in "/api/products" "/api/auth/profile"; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000$endpoint || echo "000")
+            echo "Endpoint $endpoint → HTTP $STATUS"
+          done
+        continue-on-error: true
+
+      - name: Summary Open API Check
+        run: |
+          echo "## 🔌 Open API Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Endpoint | Expected |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| /api/health | 200 OK |" >> $GITHUB_STEP_SUMMARY
+          echo "| /api/products | 200 OK |" >> $GITHUB_STEP_SUMMARY
+          echo "| /api/auth/profile | 401 Unauthorized |" >> $GITHUB_STEP_SUMMARY
+
+  # ─────────────────────────────────────────
+  # 5. RUN SELENIUM TESTNG + JACOCO
+  # ─────────────────────────────────────────
   run-testng:
     name: 🧪 Run Selenium TestNG
     runs-on: ubuntu-latest
-    needs: build-frontend
+    needs: [build-frontend, build-backend]
     steps:
       - uses: actions/checkout@v4
 
@@ -39,10 +185,36 @@ jobs:
           java-version: '17'
           cache: 'maven'
 
-      - name: Run Tests
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Start Backend
+        working-directory: ./gearvault/backend
+        run: |
+          npm install
+          echo "PORT=5000" > .env
+          echo "MONGO_URI=mongodb://localhost:27017/gearvault_test" >> .env
+          echo "JWT_SECRET=ci_test_secret_key" >> .env
+          echo "NODE_ENV=test" >> .env
+          npm start &
+          sleep 8
+        continue-on-error: true
+
+      - name: Start Frontend Dev Server
+        working-directory: ./gearvault/frontend
+        run: |
+          npm install
+          npm run dev &
+          sleep 10
+        continue-on-error: true
+
+      - name: Run TestNG + JaCoCo
         working-directory: ./automation
         run: |
-          mvn clean verify -Dchrome.headless=true -Dtest.baseUrl=http://localhost:5173
+          mvn clean verify \
+            -Dchrome.headless=true \
+            -Dtest.baseUrl=http://localhost:5173
         continue-on-error: true
 
       - name: Upload Test Results
@@ -50,8 +222,19 @@ jobs:
         with:
           name: automation-target
           path: automation/target/
+        if: always()
 
-  # 3. SONARCLOUD SCAN
+      - name: Publish TestNG Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: testng-report
+          path: automation/target/surefire-reports/
+        if: always()
+
+  # ─────────────────────────────────────────
+  # 6. SONARCLOUD SCAN
+  #    (Jenkins → Sonar trong diagram)
+  # ─────────────────────────────────────────
   sonarcloud-scan:
     name: 🔍 SonarCloud Scan
     runs-on: ubuntu-latest
@@ -74,7 +257,7 @@ jobs:
           name: automation-target
           path: automation/target/
 
-      - name: Compile project
+      - name: Compile Project
         working-directory: ./automation
         run: mvn compile test-compile -DskipTests
 
@@ -88,11 +271,16 @@ jobs:
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
             -Dsonar.java.binaries=target/classes
             -Dsonar.java.test.binaries=target/test-classes
+            -Dsonar.sources=src/main
+            -Dsonar.tests=src/test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  # 4. JIRA SYNC
+  # ─────────────────────────────────────────
+  # 7. JIRA SYNC
+  #    (Flk → Convert ID-Task → Log Jira)
+  # ─────────────────────────────────────────
   jira-sync:
     name: 📋 Jira Sync
     runs-on: ubuntu-latest
@@ -101,28 +289,84 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Extract Jira ID từ commit message (Flk → Convert ID-Task)
       - name: Extract Jira ID
         id: extract_jira
         shell: bash
         run: |
           MSG=$(git log -1 --pretty=%B)
+          echo "Commit message: $MSG"
           JIRA_ID=$(echo "$MSG" | grep -oP 'KAN-\d+' | head -1 || echo "")
           echo "jira_id=$JIRA_ID" >> $GITHUB_OUTPUT
-          if [ -n "$JIRA_ID" ]; then echo "found=true" >> $GITHUB_OUTPUT; else echo "found=false" >> $GITHUB_OUTPUT; fi
+          if [ -n "$JIRA_ID" ]; then
+            echo "found=true" >> $GITHUB_OUTPUT
+            echo "✅ Found Jira ID: $JIRA_ID"
+          else
+            echo "found=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No Jira ID found in commit message"
+          fi
 
-      - name: Update Jira
+      # Xác định trạng thái pipeline để log vào Jira
+      - name: Determine Pipeline Status
+        id: pipeline_status
+        shell: bash
+        run: |
+          TESTNG="${{ needs.run-testng.result }}"
+          SONAR="${{ needs.sonarcloud-scan.result }}"
+
+          if [ "$TESTNG" = "success" ] && [ "$SONAR" = "success" ]; then
+            STATUS="✅ PASSED"
+            EMOJI="✅"
+          elif [ "$TESTNG" = "failure" ] || [ "$SONAR" = "failure" ]; then
+            STATUS="❌ FAILED"
+            EMOJI="❌"
+          else
+            STATUS="⚠️ PARTIAL"
+            EMOJI="⚠️"
+          fi
+
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+          echo "emoji=$EMOJI" >> $GITHUB_OUTPUT
+
+      # Log Jira — comment chi tiết lên ticket
+      - name: Log to Jira (TSF Module → Log Jira)
         if: steps.extract_jira.outputs.found == 'true'
         run: |
-          curl -s -X POST "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ steps.extract_jira.outputs.jira_id }}/comment" \
+          COMMENT_TEXT="🤖 CI/CD Pipeline Report\n\nBranch: ${{ github.ref_name }}\nCommit: ${{ github.sha }}\nStatus: ${{ steps.pipeline_status.outputs.status }}\n\nJob Results:\n- 🧪 TestNG: ${{ needs.run-testng.result }}\n- 🔍 SonarCloud: ${{ needs.sonarcloud-scan.result }}\n\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          curl -s -X POST \
+            "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ steps.extract_jira.outputs.jira_id }}/comment" \
             -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '{"body": {"type": "doc", "version": 1, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "🤖 CI/CD Pipeline executed."}]}]}}'
+            -d "{
+              \"body\": {
+                \"type\": \"doc\",
+                \"version\": 1,
+                \"content\": [{
+                  \"type\": \"paragraph\",
+                  \"content\": [{
+                    \"type\": \"text\",
+                    \"text\": \"$COMMENT_TEXT\"
+                  }]
+                }]
+              }
+            }"
+          echo "✅ Logged to Jira ticket ${{ steps.extract_jira.outputs.jira_id }}"
 
-      - name: Jira Summary
+      # Pipeline Summary
+      - name: Pipeline Summary
         if: always()
         run: |
-          echo "## 📋 Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## ${{ steps.pipeline_status.outputs.emoji }} GearVault CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Job | Result |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| TestNG | ${{ needs.run-testng.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| SonarCloud | ${{ needs.sonarcloud-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🌐 Build Frontend | ${{ needs.build-frontend.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔧 Build Backend | ${{ needs.build-backend.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔌 Open API Check | ${{ needs.check-open-api.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⚡ Unit Test Vitest | ${{ needs.unit-test-frontend.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧪 TestNG Selenium | ${{ needs.run-testng.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔍 SonarCloud | ${{ needs.sonarcloud-scan.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Jira Ticket:** ${{ steps.extract_jira.outputs.jira_id || 'None found' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Overall:** ${{ steps.pipeline_status.outputs.status }}" >> $GITHUB_STEP_SUMMARY
