@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "GearVault API",
-    "description": "GearVault Backend API Collection - Generated from source code",
+    "description": "GearVault Backend API Collection - with test assertions",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -20,100 +20,89 @@
       "item": [
         {
           "name": "Register",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('success = true', () => pm.expect(pm.response.json().success).to.be.true);",
+            "pm.test('Có token', () => pm.expect(pm.response.json().data.token).to.be.a('string'));",
+            "pm.test('Có user info', () => {",
+            "  const u = pm.response.json().data.user;",
+            "  pm.expect(u._id).to.be.a('string');",
+            "  pm.expect(u.email).to.be.a('string');",
+            "});",
+            "if (pm.response.code === 201) pm.collectionVariables.set('token', pm.response.json().data.token);"
+          ]}}],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"] },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"123456\"\n}"
-            }
-          },
-          "event": [{
-            "listen": "test",
-            "script": { "exec": [
-              "if (pm.response.code === 201) {",
-              "  const res = pm.response.json();",
-              "  pm.collectionVariables.set('token', res.data.token);",
-              "}"
-            ], "type": "text/javascript" }
-          }]
-        },
-        {
-          "name": "Login",
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"123456\"\n}"
-            }
-          },
-          "event": [{
-            "listen": "test",
-            "script": { "exec": [
-              "if (pm.response.code === 200) {",
-              "  const res = pm.response.json();",
-              "  pm.collectionVariables.set('token', res.data.token);",
-              "}"
-            ], "type": "text/javascript" }
-          }]
-        },
-        {
-          "name": "Login (Admin)",
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@gearvault.com\",\n  \"password\": \"admin123\"\n}"
-            }
-          },
-          "event": [{
-            "listen": "test",
-            "script": { "exec": [
-              "if (pm.response.code === 200) {",
-              "  const res = pm.response.json();",
-              "  pm.collectionVariables.set('admin_token', res.data.token);",
-              "}"
-            ], "type": "text/javascript" }
-          }]
-        },
-        {
-          "name": "Get Profile",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": { "raw": "{{base_url}}/api/auth/profile", "host": ["{{base_url}}"], "path": ["api", "auth", "profile"] }
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api","auth","register"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"123456\"\n}" }
           }
         },
         {
-          "name": "Update Profile",
+          "name": "Login",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('success = true', () => pm.expect(pm.response.json().success).to.be.true);",
+            "pm.test('Có JWT token', () => {",
+            "  const token = pm.response.json().data.token;",
+            "  pm.expect(token).to.be.a('string');",
+            "  pm.expect(token.split('.').length).to.equal(3);",
+            "});",
+            "pm.test('Role là user', () => pm.expect(pm.response.json().data.user.role).to.equal('user'));",
+            "if (pm.response.code === 200) pm.collectionVariables.set('token', pm.response.json().data.token);"
+          ]}}],
           "request": {
-            "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": { "raw": "{{base_url}}/api/auth/profile", "host": ["{{base_url}}"], "path": ["api", "auth", "profile"] },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Name\",\n  \"email\": \"updated@example.com\"\n}"
-            }
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"123456\"\n}" }
+          }
+        },
+        {
+          "name": "Login (Admin)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('success = true', () => pm.expect(pm.response.json().success).to.be.true);",
+            "pm.test('Có JWT token', () => pm.expect(pm.response.json().data.token).to.be.a('string'));",
+            "pm.test('Role là admin', () => pm.expect(pm.response.json().data.user.role).to.equal('admin'));",
+            "if (pm.response.code === 200) pm.collectionVariables.set('admin_token', pm.response.json().data.token);"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@gearvault.com\",\n  \"password\": \"admin123\"\n}" }
+          }
+        },
+        {
+          "name": "Get Profile",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('success = true', () => pm.expect(pm.response.json().success).to.be.true);",
+            "pm.test('Có _id và email', () => {",
+            "  const u = pm.response.json().data;",
+            "  pm.expect(u._id).to.be.a('string');",
+            "  pm.expect(u.email).to.be.a('string');",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/auth/profile", "host": ["{{base_url}}"], "path": ["api","auth","profile"] }
           }
         },
         {
           "name": "Forgot Password",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('success = true', () => pm.expect(pm.response.json().success).to.be.true);",
+            "pm.test('Có message', () => pm.expect(pm.response.json().message).to.be.a('string'));"
+          ]}}],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": { "raw": "{{base_url}}/api/auth/forgot-password", "host": ["{{base_url}}"], "path": ["api", "auth", "forgot-password"] },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"test@example.com\"\n}"
-            }
+            "url": { "raw": "{{base_url}}/api/auth/forgot-password", "host": ["{{base_url}}"], "path": ["api","auth","forgot-password"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@example.com\"\n}" }
           }
         }
       ]
@@ -123,99 +112,109 @@
       "item": [
         {
           "name": "Get All Products",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('success = true', () => pm.expect(pm.response.json().success).to.be.true);",
+            "pm.test('data là array', () => pm.expect(pm.response.json().data).to.be.an('array'));",
+            "pm.test('Có pagination', () => pm.expect(pm.response.json().pagination).to.be.an('object'));",
+            "if (pm.response.json().data.length > 0) {",
+            "  pm.collectionVariables.set('product_id', pm.response.json().data[0]._id);",
+            "  pm.collectionVariables.set('product_slug', pm.response.json().data[0].slug);",
+            "}"
+          ]}}],
           "request": {
             "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/api/products?page=1&limit=12&sort=newest",
-              "host": ["{{base_url}}"],
-              "path": ["api", "products"],
-              "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "12" },
-                { "key": "sort", "value": "newest", "description": "newest | price_asc | price_desc | rating | popular" },
-                { "key": "category", "value": "", "disabled": true },
-                { "key": "brand", "value": "", "disabled": true },
-                { "key": "minPrice", "value": "", "disabled": true },
-                { "key": "maxPrice", "value": "", "disabled": true },
-                { "key": "rating", "value": "", "disabled": true },
-                { "key": "search", "value": "", "disabled": true },
-                { "key": "featured", "value": "true", "disabled": true },
-                { "key": "sale", "value": "true", "disabled": true }
-              ]
-            }
+            "url": { "raw": "{{base_url}}/api/products?page=1&limit=12&sort=newest", "host": ["{{base_url}}"], "path": ["api","products"], "query": [{"key":"page","value":"1"},{"key":"limit","value":"12"},{"key":"sort","value":"newest"}] }
           }
         },
         {
           "name": "Get Featured Products",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('data là array', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+          ]}}],
           "request": {
             "method": "GET",
-            "url": { "raw": "{{base_url}}/api/products/featured", "host": ["{{base_url}}"], "path": ["api", "products", "featured"] }
+            "url": { "raw": "{{base_url}}/api/products/featured", "host": ["{{base_url}}"], "path": ["api","products","featured"] }
           }
         },
         {
           "name": "Get Best Sellers",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('data là array', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+          ]}}],
           "request": {
             "method": "GET",
-            "url": { "raw": "{{base_url}}/api/products/best-sellers", "host": ["{{base_url}}"], "path": ["api", "products", "best-sellers"] }
+            "url": { "raw": "{{base_url}}/api/products/best-sellers", "host": ["{{base_url}}"], "path": ["api","products","best-sellers"] }
           }
         },
         {
           "name": "Get Flash Sale Products",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('data là array', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+          ]}}],
           "request": {
             "method": "GET",
-            "url": { "raw": "{{base_url}}/api/products/flash-sale", "host": ["{{base_url}}"], "path": ["api", "products", "flash-sale"] }
+            "url": { "raw": "{{base_url}}/api/products/flash-sale", "host": ["{{base_url}}"], "path": ["api","products","flash-sale"] }
           }
         },
         {
           "name": "Get Product by Slug",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200 hoặc 404', () => pm.expect([200,404]).to.include(pm.response.code));",
+            "if (pm.response.code === 200) {",
+            "  pm.test('Có slug', () => pm.expect(pm.response.json().data.slug).to.be.a('string'));",
+            "  pm.test('Có price', () => pm.expect(pm.response.json().data.price).to.be.a('number'));",
+            "}"
+          ]}}],
           "request": {
             "method": "GET",
-            "url": { "raw": "{{base_url}}/api/products/{{product_slug}}", "host": ["{{base_url}}"], "path": ["api", "products", "{{product_slug}}"] }
-          }
-        },
-        {
-          "name": "Get Related Products",
-          "request": {
-            "method": "GET",
-            "url": { "raw": "{{base_url}}/api/products/{{product_slug}}/related", "host": ["{{base_url}}"], "path": ["api", "products", "{{product_slug}}", "related"] }
+            "url": { "raw": "{{base_url}}/api/products/{{product_slug}}", "host": ["{{base_url}}"], "path": ["api","products","{{product_slug}}"] }
           }
         },
         {
           "name": "Create Product (Admin)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('success = true', () => pm.expect(pm.response.json().success).to.be.true);",
+            "pm.test('Có _id', () => pm.expect(pm.response.json().data._id).to.be.a('string'));",
+            "if (pm.response.code === 201) pm.collectionVariables.set('product_id', pm.response.json().data._id);"
+          ]}}],
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
-            ],
-            "url": { "raw": "{{base_url}}/api/products", "host": ["{{base_url}}"], "path": ["api", "products"] },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Sample Gear Product\",\n  \"slug\": \"sample-gear-product\",\n  \"description\": \"A great gear product\",\n  \"price\": 99.99,\n  \"brand\": \"GearBrand\",\n  \"category\": \"Cameras\",\n  \"stock\": 50,\n  \"images\": [\"https://example.com/image.jpg\"],\n  \"isFeatured\": false,\n  \"isFlashSale\": false\n}"
-            }
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{admin_token}}"}],
+            "url": { "raw": "{{base_url}}/api/products", "host": ["{{base_url}}"], "path": ["api","products"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Test Gear Product\",\n  \"slug\": \"test-gear-product\",\n  \"description\": \"Test product description\",\n  \"price\": 99.99,\n  \"brand\": \"TestBrand\",\n  \"category\": \"Cameras\",\n  \"stock\": 50,\n  \"images\": [\"https://example.com/image.jpg\"]\n}" }
           }
         },
         {
           "name": "Update Product (Admin)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200 hoặc 404', () => pm.expect([200,404]).to.include(pm.response.code));",
+            "if (pm.response.code === 200) {",
+            "  pm.test('success = true', () => pm.expect(pm.response.json().success).to.be.true);",
+            "  pm.test('Price đã cập nhật', () => pm.expect(pm.response.json().data.price).to.equal(89.99));",
+            "}"
+          ]}}],
           "request": {
             "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
-            ],
-            "url": { "raw": "{{base_url}}/api/products/{{product_id}}", "host": ["{{base_url}}"], "path": ["api", "products", "{{product_id}}"] },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"price\": 89.99,\n  \"stock\": 45,\n  \"isFeatured\": true\n}"
-            }
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{admin_token}}"}],
+            "url": { "raw": "{{base_url}}/api/products/{{product_id}}", "host": ["{{base_url}}"], "path": ["api","products","{{product_id}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"price\": 89.99,\n  \"stock\": 45\n}" }
           }
         },
         {
           "name": "Delete Product (Admin)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200 hoặc 404', () => pm.expect([200,404]).to.include(pm.response.code));",
+            "if (pm.response.code === 200) pm.test('success = true', () => pm.expect(pm.response.json().success).to.be.true);"
+          ]}}],
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
-            "url": { "raw": "{{base_url}}/api/products/{{product_id}}", "host": ["{{base_url}}"], "path": ["api", "products", "{{product_id}}"] }
+            "header": [{"key":"Authorization","value":"Bearer {{admin_token}}"}],
+            "url": { "raw": "{{base_url}}/api/products/{{product_id}}", "host": ["{{base_url}}"], "path": ["api","products","{{product_id}}"] }
           }
         }
       ]
@@ -225,66 +224,71 @@
       "item": [
         {
           "name": "Create Order",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('success = true', () => pm.expect(pm.response.json().success).to.be.true);",
+            "pm.test('Có totalPrice', () => pm.expect(pm.response.json().data.totalPrice).to.be.a('number'));",
+            "pm.test('totalPrice > 0', () => pm.expect(pm.response.json().data.totalPrice).to.be.above(0));",
+            "if (pm.response.code === 201) pm.collectionVariables.set('order_id', pm.response.json().data._id);"
+          ]}}],
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": { "raw": "{{base_url}}/api/orders", "host": ["{{base_url}}"], "path": ["api", "orders"] },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"items\": [\n    {\n      \"product\": \"{{product_id}}\",\n      \"name\": \"Sample Product\",\n      \"price\": 99.99,\n      \"quantity\": 1,\n      \"image\": \"https://example.com/image.jpg\"\n    }\n  ],\n  \"shippingAddress\": {\n    \"fullName\": \"Test User\",\n    \"address\": \"123 Main St\",\n    \"city\": \"Ho Chi Minh City\",\n    \"country\": \"Vietnam\",\n    \"postalCode\": \"70000\"\n  },\n  \"paymentMethod\": \"card\",\n  \"couponCode\": \"\"\n}"
-            }
-          },
-          "event": [{
-            "listen": "test",
-            "script": { "exec": [
-              "if (pm.response.code === 201) {",
-              "  const res = pm.response.json();",
-              "  pm.collectionVariables.set('order_id', res.data._id);",
-              "}"
-            ], "type": "text/javascript" }
-          }]
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token}}"}],
+            "url": { "raw": "{{base_url}}/api/orders", "host": ["{{base_url}}"], "path": ["api","orders"] },
+            "body": { "mode": "raw", "raw": "{\n  \"items\": [{\"product\": \"{{product_id}}\", \"name\": \"Test Product\", \"price\": 99.99, \"quantity\": 1, \"image\": \"https://example.com/image.jpg\"}],\n  \"shippingAddress\": {\"fullName\": \"Test User\", \"address\": \"123 Main St\", \"city\": \"Ho Chi Minh City\", \"country\": \"Vietnam\", \"postalCode\": \"70000\"},\n  \"paymentMethod\": \"card\"\n}" }
+          }
         },
         {
           "name": "Get My Orders",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('data là array', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+          ]}}],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": { "raw": "{{base_url}}/api/orders/my", "host": ["{{base_url}}"], "path": ["api", "orders", "my"] }
+            "header": [{"key":"Authorization","value":"Bearer {{token}}"}],
+            "url": { "raw": "{{base_url}}/api/orders/my", "host": ["{{base_url}}"], "path": ["api","orders","my"] }
           }
         },
         {
           "name": "Get All Orders (Admin)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('data là array', () => pm.expect(pm.response.json().data).to.be.an('array'));",
+            "if (pm.response.json().data.length > 0) pm.collectionVariables.set('order_id', pm.response.json().data[0]._id);"
+          ]}}],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
-            "url": { "raw": "{{base_url}}/api/orders", "host": ["{{base_url}}"], "path": ["api", "orders"] }
+            "header": [{"key":"Authorization","value":"Bearer {{admin_token}}"}],
+            "url": { "raw": "{{base_url}}/api/orders", "host": ["{{base_url}}"], "path": ["api","orders"] }
           }
         },
         {
           "name": "Get Order by ID",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200 hoặc 404', () => pm.expect([200,404]).to.include(pm.response.code));",
+            "if (pm.response.code === 200) {",
+            "  pm.test('Có totalPrice', () => pm.expect(pm.response.json().data.totalPrice).to.be.a('number'));",
+            "  pm.test('Có status', () => pm.expect(pm.response.json().data.status).to.be.a('string'));",
+            "}"
+          ]}}],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": { "raw": "{{base_url}}/api/orders/{{order_id}}", "host": ["{{base_url}}"], "path": ["api", "orders", "{{order_id}}"] }
+            "header": [{"key":"Authorization","value":"Bearer {{token}}"}],
+            "url": { "raw": "{{base_url}}/api/orders/{{order_id}}", "host": ["{{base_url}}"], "path": ["api","orders","{{order_id}}"] }
           }
         },
         {
           "name": "Update Order Status (Admin)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200 hoặc 404', () => pm.expect([200,404]).to.include(pm.response.code));",
+            "if (pm.response.code === 200) pm.test('Status đã cập nhật', () => pm.expect(pm.response.json().data.status).to.equal('delivered'));"
+          ]}}],
           "request": {
             "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
-            ],
-            "url": { "raw": "{{base_url}}/api/orders/{{order_id}}/status", "host": ["{{base_url}}"], "path": ["api", "orders", "{{order_id}}", "status"] },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"status\": \"delivered\"\n}",
-              "options": { "raw": { "language": "json" } }
-            }
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{admin_token}}"}],
+            "url": { "raw": "{{base_url}}/api/orders/{{order_id}}/status", "host": ["{{base_url}}"], "path": ["api","orders","{{order_id}}","status"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"delivered\"\n}" }
           }
         }
       ]
@@ -294,41 +298,41 @@
       "item": [
         {
           "name": "Get Reviews by Product",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('data là array', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+          ]}}],
           "request": {
             "method": "GET",
-            "url": { "raw": "{{base_url}}/api/reviews/{{product_id}}", "host": ["{{base_url}}"], "path": ["api", "reviews", "{{product_id}}"] }
+            "url": { "raw": "{{base_url}}/api/reviews/{{product_id}}", "host": ["{{base_url}}"], "path": ["api","reviews","{{product_id}}"] }
           }
         },
         {
           "name": "Create Review",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 201 hoặc 409', () => pm.expect([201,409]).to.include(pm.response.code));",
+            "if (pm.response.code === 201) {",
+            "  pm.test('Có rating', () => pm.expect(pm.response.json().data.rating).to.be.a('number'));",
+            "  pm.collectionVariables.set('review_id', pm.response.json().data._id);",
+            "}"
+          ]}}],
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": { "raw": "{{base_url}}/api/reviews", "host": ["{{base_url}}"], "path": ["api", "reviews"] },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"product\": \"{{product_id}}\",\n  \"rating\": 5,\n  \"title\": \"Great product!\",\n  \"comment\": \"Really happy with this purchase.\"\n}"
-            }
-          },
-          "event": [{
-            "listen": "test",
-            "script": { "exec": [
-              "if (pm.response.code === 201) {",
-              "  const res = pm.response.json();",
-              "  pm.collectionVariables.set('review_id', res.data._id);",
-              "}"
-            ], "type": "text/javascript" }
-          }]
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token}}"}],
+            "url": { "raw": "{{base_url}}/api/reviews", "host": ["{{base_url}}"], "path": ["api","reviews"] },
+            "body": { "mode": "raw", "raw": "{\n  \"product\": \"{{product_id}}\",\n  \"rating\": 5,\n  \"title\": \"Great!\",\n  \"comment\": \"Really happy with this purchase.\"\n}" }
+          }
         },
         {
           "name": "Delete Review",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200 hoặc 404', () => pm.expect([200,404]).to.include(pm.response.code));",
+            "if (pm.response.code === 200) pm.test('success = true', () => pm.expect(pm.response.json().success).to.be.true);"
+          ]}}],
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": { "raw": "{{base_url}}/api/reviews/{{review_id}}", "host": ["{{base_url}}"], "path": ["api", "reviews", "{{review_id}}"] }
+            "header": [{"key":"Authorization","value":"Bearer {{token}}"}],
+            "url": { "raw": "{{base_url}}/api/reviews/{{review_id}}", "host": ["{{base_url}}"], "path": ["api","reviews","{{review_id}}"] }
           }
         }
       ]
@@ -338,9 +342,17 @@
       "item": [
         {
           "name": "Get All Categories",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('data là array', () => pm.expect(pm.response.json().data).to.be.an('array'));",
+            "pm.test('Có productCount', () => {",
+            "  if (pm.response.json().data.length > 0)",
+            "    pm.expect(pm.response.json().data[0].productCount).to.be.a('number');",
+            "});"
+          ]}}],
           "request": {
             "method": "GET",
-            "url": { "raw": "{{base_url}}/api/categories", "host": ["{{base_url}}"], "path": ["api", "categories"] }
+            "url": { "raw": "{{base_url}}/api/categories", "host": ["{{base_url}}"], "path": ["api","categories"] }
           }
         }
       ]
@@ -350,17 +362,18 @@
       "item": [
         {
           "name": "Validate Coupon",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200 hoặc 404 hoặc 400', () => pm.expect([200,400,404]).to.include(pm.response.code));",
+            "if (pm.response.code === 200) {",
+            "  pm.test('Có discount', () => pm.expect(pm.response.json().data.discount).to.be.a('number'));",
+            "  pm.test('Có type', () => pm.expect(pm.response.json().data.type).to.be.a('string'));",
+            "}"
+          ]}}],
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": { "raw": "{{base_url}}/api/coupons/validate", "host": ["{{base_url}}"], "path": ["api", "coupons", "validate"] },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"code\": \"SAVE10\",\n  \"total\": 150\n}"
-            }
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{token}}"}],
+            "url": { "raw": "{{base_url}}/api/coupons/validate", "host": ["{{base_url}}"], "path": ["api","coupons","validate"] },
+            "body": { "mode": "raw", "raw": "{\n  \"code\": \"SAVE10\",\n  \"total\": 150\n}" }
           }
         }
       ]
@@ -370,41 +383,41 @@
       "item": [
         {
           "name": "Get All Users",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('data là array', () => pm.expect(pm.response.json().data).to.be.an('array'));",
+            "pm.test('Có pagination', () => pm.expect(pm.response.json().pagination).to.be.an('object'));",
+            "if (pm.response.json().data.length > 0) pm.collectionVariables.set('user_id', pm.response.json().data[0]._id);"
+          ]}}],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
-            "url": {
-              "raw": "{{base_url}}/api/users?page=1&limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["api", "users"],
-              "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "20" }
-              ]
-            }
+            "header": [{"key":"Authorization","value":"Bearer {{admin_token}}"}],
+            "url": { "raw": "{{base_url}}/api/users?page=1&limit=20", "host": ["{{base_url}}"], "path": ["api","users"], "query": [{"key":"page","value":"1"},{"key":"limit","value":"20"}] }
           }
         },
         {
           "name": "Update User",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200 hoặc 404', () => pm.expect([200,404]).to.include(pm.response.code));",
+            "if (pm.response.code === 200) pm.test('success = true', () => pm.expect(pm.response.json().success).to.be.true);"
+          ]}}],
           "request": {
             "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
-            ],
-            "url": { "raw": "{{base_url}}/api/users/{{user_id}}", "host": ["{{base_url}}"], "path": ["api", "users", "{{user_id}}"] },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"role\": \"admin\"\n}"
-            }
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{admin_token}}"}],
+            "url": { "raw": "{{base_url}}/api/users/{{user_id}}", "host": ["{{base_url}}"], "path": ["api","users","{{user_id}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"role\": \"user\"\n}" }
           }
         },
         {
           "name": "Delete User",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200 hoặc 404', () => pm.expect([200,404]).to.include(pm.response.code));",
+            "if (pm.response.code === 200) pm.test('success = true', () => pm.expect(pm.response.json().success).to.be.true);"
+          ]}}],
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
-            "url": { "raw": "{{base_url}}/api/users/{{user_id}}", "host": ["{{base_url}}"], "path": ["api", "users", "{{user_id}}"] }
+            "header": [{"key":"Authorization","value":"Bearer {{admin_token}}"}],
+            "url": { "raw": "{{base_url}}/api/users/{{user_id}}", "host": ["{{base_url}}"], "path": ["api","users","{{user_id}}"] }
           }
         }
       ]
@@ -414,26 +427,42 @@
       "item": [
         {
           "name": "Get Dashboard Stats",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Có totalOrders', () => pm.expect(pm.response.json().data.totalOrders).to.be.a('number'));",
+            "pm.test('Có totalUsers', () => pm.expect(pm.response.json().data.totalUsers).to.be.a('number'));",
+            "pm.test('Có totalProducts', () => pm.expect(pm.response.json().data.totalProducts).to.be.a('number'));",
+            "pm.test('Có totalRevenue', () => pm.expect(pm.response.json().data.totalRevenue).to.be.a('number'));"
+          ]}}],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
-            "url": { "raw": "{{base_url}}/api/admin/dashboard", "host": ["{{base_url}}"], "path": ["api", "admin", "dashboard"] }
+            "header": [{"key":"Authorization","value":"Bearer {{admin_token}}"}],
+            "url": { "raw": "{{base_url}}/api/admin/dashboard", "host": ["{{base_url}}"], "path": ["api","admin","dashboard"] }
           }
         },
         {
           "name": "Get Revenue Data",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('data là array', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+          ]}}],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
-            "url": { "raw": "{{base_url}}/api/admin/revenue", "host": ["{{base_url}}"], "path": ["api", "admin", "revenue"] }
+            "header": [{"key":"Authorization","value":"Bearer {{admin_token}}"}],
+            "url": { "raw": "{{base_url}}/api/admin/revenue", "host": ["{{base_url}}"], "path": ["api","admin","revenue"] }
           }
         },
         {
           "name": "Get Top Products",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('data là array', () => pm.expect(pm.response.json().data).to.be.an('array'));",
+            "pm.test('Tối đa 5 sản phẩm', () => pm.expect(pm.response.json().data.length).to.be.at.most(5));"
+          ]}}],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
-            "url": { "raw": "{{base_url}}/api/admin/top-products", "host": ["{{base_url}}"], "path": ["api", "admin", "top-products"] }
+            "header": [{"key":"Authorization","value":"Bearer {{admin_token}}"}],
+            "url": { "raw": "{{base_url}}/api/admin/top-products", "host": ["{{base_url}}"], "path": ["api","admin","top-products"] }
           }
         }
       ]
