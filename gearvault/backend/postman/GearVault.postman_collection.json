@@ -1,0 +1,442 @@
+{
+  "info": {
+    "name": "GearVault API",
+    "description": "GearVault Backend API Collection - Generated from source code",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:5000", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "admin_token", "value": "", "type": "string" },
+    { "key": "product_id", "value": "", "type": "string" },
+    { "key": "product_slug", "value": "", "type": "string" },
+    { "key": "order_id", "value": "", "type": "string" },
+    { "key": "review_id", "value": "", "type": "string" },
+    { "key": "user_id", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"123456\"\n}"
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "if (pm.response.code === 201) {",
+              "  const res = pm.response.json();",
+              "  pm.collectionVariables.set('token', res.data.token);",
+              "}"
+            ], "type": "text/javascript" }
+          }]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"123456\"\n}"
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "if (pm.response.code === 200) {",
+              "  const res = pm.response.json();",
+              "  pm.collectionVariables.set('token', res.data.token);",
+              "}"
+            ], "type": "text/javascript" }
+          }]
+        },
+        {
+          "name": "Login (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@gearvault.com\",\n  \"password\": \"admin123\"\n}"
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "if (pm.response.code === 200) {",
+              "  const res = pm.response.json();",
+              "  pm.collectionVariables.set('admin_token', res.data.token);",
+              "}"
+            ], "type": "text/javascript" }
+          }]
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/auth/profile", "host": ["{{base_url}}"], "path": ["api", "auth", "profile"] }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/auth/profile", "host": ["{{base_url}}"], "path": ["api", "auth", "profile"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"email\": \"updated@example.com\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/forgot-password", "host": ["{{base_url}}"], "path": ["api", "auth", "forgot-password"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 Products",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/products?page=1&limit=12&sort=newest",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "12" },
+                { "key": "sort", "value": "newest", "description": "newest | price_asc | price_desc | rating | popular" },
+                { "key": "category", "value": "", "disabled": true },
+                { "key": "brand", "value": "", "disabled": true },
+                { "key": "minPrice", "value": "", "disabled": true },
+                { "key": "maxPrice", "value": "", "disabled": true },
+                { "key": "rating", "value": "", "disabled": true },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "featured", "value": "true", "disabled": true },
+                { "key": "sale", "value": "true", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Featured Products",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/products/featured", "host": ["{{base_url}}"], "path": ["api", "products", "featured"] }
+          }
+        },
+        {
+          "name": "Get Best Sellers",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/products/best-sellers", "host": ["{{base_url}}"], "path": ["api", "products", "best-sellers"] }
+          }
+        },
+        {
+          "name": "Get Flash Sale Products",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/products/flash-sale", "host": ["{{base_url}}"], "path": ["api", "products", "flash-sale"] }
+          }
+        },
+        {
+          "name": "Get Product by Slug",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/products/{{product_slug}}", "host": ["{{base_url}}"], "path": ["api", "products", "{{product_slug}}"] }
+          }
+        },
+        {
+          "name": "Get Related Products",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/products/{{product_slug}}/related", "host": ["{{base_url}}"], "path": ["api", "products", "{{product_slug}}", "related"] }
+          }
+        },
+        {
+          "name": "Create Product (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/products", "host": ["{{base_url}}"], "path": ["api", "products"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sample Gear Product\",\n  \"slug\": \"sample-gear-product\",\n  \"description\": \"A great gear product\",\n  \"price\": 99.99,\n  \"brand\": \"GearBrand\",\n  \"category\": \"Cameras\",\n  \"stock\": 50,\n  \"images\": [\"https://example.com/image.jpg\"],\n  \"isFeatured\": false,\n  \"isFlashSale\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Product (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/products/{{product_id}}", "host": ["{{base_url}}"], "path": ["api", "products", "{{product_id}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 89.99,\n  \"stock\": 45,\n  \"isFeatured\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Product (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/api/products/{{product_id}}", "host": ["{{base_url}}"], "path": ["api", "products", "{{product_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛒 Orders",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/orders", "host": ["{{base_url}}"], "path": ["api", "orders"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product\": \"{{product_id}}\",\n      \"name\": \"Sample Product\",\n      \"price\": 99.99,\n      \"quantity\": 1,\n      \"image\": \"https://example.com/image.jpg\"\n    }\n  ],\n  \"shippingAddress\": {\n    \"fullName\": \"Test User\",\n    \"address\": \"123 Main St\",\n    \"city\": \"Ho Chi Minh City\",\n    \"country\": \"Vietnam\",\n    \"postalCode\": \"70000\"\n  },\n  \"paymentMethod\": \"card\",\n  \"couponCode\": \"\"\n}"
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "if (pm.response.code === 201) {",
+              "  const res = pm.response.json();",
+              "  pm.collectionVariables.set('order_id', res.data._id);",
+              "}"
+            ], "type": "text/javascript" }
+          }]
+        },
+        {
+          "name": "Get My Orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/orders/my", "host": ["{{base_url}}"], "path": ["api", "orders", "my"] }
+          }
+        },
+        {
+          "name": "Get All Orders (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/api/orders", "host": ["{{base_url}}"], "path": ["api", "orders"] }
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/orders/{{order_id}}", "host": ["{{base_url}}"], "path": ["api", "orders", "{{order_id}}"] }
+          }
+        },
+        {
+          "name": "Update Order Status (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/orders/{{order_id}}/status", "host": ["{{base_url}}"], "path": ["api", "orders", "{{order_id}}", "status"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"delivered\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "⭐ Reviews",
+      "item": [
+        {
+          "name": "Get Reviews by Product",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/reviews/{{product_id}}", "host": ["{{base_url}}"], "path": ["api", "reviews", "{{product_id}}"] }
+          }
+        },
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/reviews", "host": ["{{base_url}}"], "path": ["api", "reviews"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product\": \"{{product_id}}\",\n  \"rating\": 5,\n  \"title\": \"Great product!\",\n  \"comment\": \"Really happy with this purchase.\"\n}"
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "if (pm.response.code === 201) {",
+              "  const res = pm.response.json();",
+              "  pm.collectionVariables.set('review_id', res.data._id);",
+              "}"
+            ], "type": "text/javascript" }
+          }]
+        },
+        {
+          "name": "Delete Review",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/reviews/{{review_id}}", "host": ["{{base_url}}"], "path": ["api", "reviews", "{{review_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏷️ Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/categories", "host": ["{{base_url}}"], "path": ["api", "categories"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎟️ Coupons",
+      "item": [
+        {
+          "name": "Validate Coupon",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/coupons/validate", "host": ["{{base_url}}"], "path": ["api", "coupons", "validate"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"SAVE10\",\n  \"total\": 150\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Users (Admin)",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/users?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/users/{{user_id}}", "host": ["{{base_url}}"], "path": ["api", "users", "{{user_id}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"admin\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/api/users/{{user_id}}", "host": ["{{base_url}}"], "path": ["api", "users", "{{user_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 Admin Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/api/admin/dashboard", "host": ["{{base_url}}"], "path": ["api", "admin", "dashboard"] }
+          }
+        },
+        {
+          "name": "Get Revenue Data",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/api/admin/revenue", "host": ["{{base_url}}"], "path": ["api", "admin", "revenue"] }
+          }
+        },
+        {
+          "name": "Get Top Products",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/api/admin/top-products", "host": ["{{base_url}}"], "path": ["api", "admin", "top-products"] }
+          }
+        }
+      ]
+    }
+  ]
+}
