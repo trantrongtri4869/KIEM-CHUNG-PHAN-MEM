@@ -1,0 +1,5 @@
+com\gearvault\tests\LoginTest.class
+com\gearvault\tests\RegisterTest.class
+com\gearvault\tests\BaseTest.class
+com\gearvault\tests\CartTest.class
+com\gearvault\tests\ProductTest.class
