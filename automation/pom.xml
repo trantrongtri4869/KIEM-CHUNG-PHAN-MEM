@@ -25,16 +25,13 @@
     </properties>
 
     <dependencies>
+        <!-- Selenium (đã bao gồm DevTools, không cần thêm selenium-devtools-vXXX) -->
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
             <version>${selenium.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.seleniumhq.selenium</groupId>
-            <artifactId>selenium-devtools-v121</artifactId>
-            <version>${selenium.version}</version>
-        </dependency>
+
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
