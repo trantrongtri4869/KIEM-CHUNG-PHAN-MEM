@@ -13,6 +13,7 @@ export default {
         mono: ['JetBrains Mono', 'monospace'],
       },
       colors: {
+        // --- GIỮ NGUYÊN BẢNG MÀU CŨ CỦA BẠN ---
         brand: {
           50: '#eef2ff',
           100: '#e0e7ff',
@@ -35,7 +36,13 @@ export default {
           850: '#172033',
           900: '#0f172a',
           950: '#07090f',
-        }
+        },
+        // --- THÊM PHẦN NÀY ĐỂ FIX LỖI "border-border" VÀ SHADCN UI ---
+        border: "hsl(var(--border, 214.3 31.8% 91.4%))",
+        input: "hsl(var(--input, 214.3 31.8% 91.4%))",
+        ring: "hsl(var(--ring, 244.5 57.9% 50.6%))",
+        background: "hsl(var(--background, 0 0% 100%))",
+        foreground: "hsl(var(--foreground, 222.2 84% 4.9%))",
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-out',

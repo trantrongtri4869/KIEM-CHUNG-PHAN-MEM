@@ -48,11 +48,23 @@ public abstract class BasePage {
     // =============================================
 
     protected void click(By locator) {
-        wait.waitForClickable(locator).click();
+        try {
+            scrollToElement(locator);
+            wait.waitForClickable(locator).click();
+        } catch (ElementClickInterceptedException e) {
+            // Nếu bị che khuất, thử click bằng JavaScript
+            jsClick(locator);
+        }
     }
 
     protected void click(WebElement element) {
-        wait.waitForClickable(element).click();
+        try {
+            scrollToElement(element);
+            wait.waitForClickable(element).click();
+        } catch (ElementClickInterceptedException e) {
+            // Nếu bị che khuất, thử click bằng JavaScript
+            jsClick(element);
+        }
     }
 
     /** Click bằng JavaScript - dùng khi element bị che khuất */
