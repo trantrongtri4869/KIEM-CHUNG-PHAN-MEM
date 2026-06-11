@@ -1,68 +1,48 @@
 package com.gearvault.pages;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.ui.Select;
 
 import java.util.List;
 
-/**
- * Page Object cho trang Products (/products).
- * Dựa trên ProductsPage.tsx.
- *
- * Features:
- * - Search bar (local search trong trang)
- * - Filter sidebar: category, brand, price range, rating
- * - Sort dropdown
- * - Grid / List view toggle
- * - Product cards
- */
 public class ProductsPage extends BasePage {
 
     public static final String PATH = "/products";
 
-    // ── Search ────────────────────────────────────────
-    @FindBy(css = "input[placeholder*='Search'], input[type='search']")
-    private WebElement searchInput;
-    private final By searchToggleBtnLocator = By.cssSelector("button[aria-label='Search'], button[aria-label*='search']");
-    private final By searchFieldLocator = By.cssSelector("input[placeholder*='Search'], input[type='search']");
+    private final By searchBtnLocator = By.xpath(
+        "//button[@aria-label='Search' or normalize-space()='Search']"
+    );
+    private final By searchInputLocator = By.xpath(
+        "//input[contains(@placeholder,'Search for gaming') or contains(@placeholder,'Search products')]"
+    );
 
-    // ── Sort ──────────────────────────────────────────
-    private final By sortDropdownLocator = By.cssSelector("select, [class*='sort'] button, button[class*='ChevronDown']");
-    private final By sortOptionLocator   = By.cssSelector("[role='option'], option");
+    private final By sortSelectLocator = By.cssSelector("select");
+    private final By productCardLocator = By.cssSelector("a[href*='/products/']");
 
-    // ── Filter Sidebar ────────────────────────────────
-    private final By filterToggleBtnLocator  = By.cssSelector("button[class*='filter'], button:has(svg.lucide-sliders-horizontal), button:has(svg.lucide-filter)");
-    private final By sidebarLocator          = By.cssSelector("aside, [class*='sidebar'], [class*='filter-panel']");
+    // No results — app có thể hiển thị heading "Search: "query"" hoặc "No products found"
+    private final By noResultsLocator = By.xpath(
+        "//*[contains(normalize-space(),'No products') or " +
+        "contains(normalize-space(),'no products') or " +
+        "contains(normalize-space(),'not found') or " +
+        "contains(normalize-space(),'0 results') or " +
+        "contains(normalize-space(),'No results')]"
+    );
 
-    // Category checkboxes/buttons
-    private final By categoryFilterLocator   = By.xpath("//span[contains(text(),'Headsets') or contains(text(),'Mice') or contains(text(),'Keyboards') or contains(text(),'Monitors')]/preceding-sibling::input[@type='checkbox']");
+    private final By skeletonLocator = By.cssSelector("[class*='skeleton'], [class*='animate-pulse']");
 
-    // Brand checkboxes
-    private final By brandCheckboxLocator    = By.xpath("//input[@type='checkbox'][ancestor::*[contains(@class,'brand') or contains(@class,'Brand')]]");
+    private final By gridViewBtnLocator = By.xpath(
+        "//button[.//*[local-name()='svg'][contains(@class,'lucide-layout-grid') or contains(@class,'lucide-grid')]]"
+    );
+    private final By listViewBtnLocator = By.xpath(
+        "//button[.//*[local-name()='svg'][contains(@class,'lucide-list')]]"
+    );
 
-    // Price range
-    private final By priceRangeLocator       = By.cssSelector("input[type='radio'][name='price'], button[class*='price']");
-
-    // Rating filter
-    private final By ratingFilterLocator     = By.cssSelector("[class*='rating'] button, button[class*='star']");
-
-    // Clear filters
-    private final By clearFiltersLocator     = By.xpath("//button[contains(normalize-space(),'Clear') or contains(normalize-space(),'Reset')]");
-
-    // ── View Toggle ───────────────────────────────────
-    private final By gridViewBtnLocator      = By.cssSelector("button:has(svg.lucide-grid2x2), button[aria-label*='grid']");
-    private final By listViewBtnLocator      = By.cssSelector("button:has(svg.lucide-list), button[aria-label*='list']");
-
-    // ── Product Cards ─────────────────────────────────
-    private final By productCardLocator      = By.cssSelector("a.group.block");
-    private final By productNameLocator      = By.cssSelector("h3.font-semibold");
-    private final By productPriceLocator     = By.cssSelector("span.font-bold.text-base");
-    private final By noResultsLocator        = By.xpath("//*[contains(normalize-space(),'No products') or contains(normalize-space(),'no results')]");
-
-    // ── Loading ───────────────────────────────────────
-    private final By skeletonLocator         = By.cssSelector("[class*='skeleton'], [class*='animate-pulse']");
+    private final By clearFiltersLocator = By.xpath(
+        "//button[contains(normalize-space(),'Clear All Filters')]"
+    );
 
     public ProductsPage(WebDriver driver) {
         super(driver);
@@ -73,153 +53,134 @@ public class ProductsPage extends BasePage {
         waitForProductsToLoad();
     }
 
-    // ── Loading ───────────────────────────────────────
-
     public void waitForProductsToLoad() {
         wait.waitForSpinnerToDisappear(skeletonLocator);
-        // Chờ ít nhất 1 product card xuất hiện
-        try {
-            wait.waitForMinimumElements(productCardLocator, 1);
-        } catch (Exception ignored) {}
+        // Không throw nếu không có sản phẩm (search no results)
+        try { Thread.sleep(500); } catch (InterruptedException ignored) {}
     }
-
-    // ── Search ────────────────────────────────────────
 
     public void searchProducts(String query) {
-        if (!isDisplayed(searchFieldLocator) && isDisplayed(searchToggleBtnLocator)) {
-            click(searchToggleBtnLocator);
+        click(searchBtnLocator);
+        waitForVisible(searchInputLocator);
+        type(searchInputLocator, query);
+        driver.findElement(searchInputLocator).sendKeys(Keys.ENTER);
+        // Đợi navigate đến trang search results
+        try { Thread.sleep(1500); } catch (InterruptedException ignored) {}
+        // Đợi skeleton biến mất
+        wait.waitForSpinnerToDisappear(skeletonLocator);
+        try { Thread.sleep(500); } catch (InterruptedException ignored) {}
+    }
+
+    public void sortBy(String optionTextOrValue) {
+        waitForVisible(sortSelectLocator);
+        WebElement selectEl = driver.findElement(sortSelectLocator);
+        Select select = new Select(selectEl);
+        try {
+            select.selectByValue(toSortValue(optionTextOrValue));
+        } catch (Exception e) {
+            select.selectByVisibleText(optionTextOrValue);
         }
-
-        waitForVisible(searchFieldLocator);
-        type(searchFieldLocator, query);
-
-        // Chờ UI update sau khi search
-        wait.waitFor(driver -> {
-            List<WebElement> cards = driver.findElements(productCardLocator);
-            return !cards.isEmpty() || driver.findElements(noResultsLocator).size() > 0;
-        });
-    }
-
-    public void clearSearch() {
-        if (!isDisplayed(searchFieldLocator) && isDisplayed(searchToggleBtnLocator)) {
-            click(searchToggleBtnLocator);
-        }
-        type(searchFieldLocator, "");
-    }
-
-    // ── Sort ──────────────────────────────────────────
-
-    /**
-     * Chọn sort option theo label text.
-     * Ví dụ: "Price: Low to High", "Best Rated"
-     */
-    public void sortBy(String optionText) {
-        click(sortDropdownLocator);
-        By optionLocator = By.xpath(
-            "//option[normalize-space()='" + optionText + "'] | " +
-            "//*[@role='option'][normalize-space()='" + optionText + "']"
-        );
-        wait.waitForClickable(optionLocator);
-        click(optionLocator);
-    }
-
-    // ── Filters ───────────────────────────────────────
-
-    public void openFilterSidebar() {
-        if (!isDisplayed(sidebarLocator)) {
-            click(filterToggleBtnLocator);
-            waitForVisible(sidebarLocator);
-        }
-    }
-
-    /**
-     * Filter theo category name.
-     */
-    public void filterByCategory(String categoryName) {
-        openFilterSidebar();
-        By locator = By.xpath(
-            "//label[contains(normalize-space(),'" + categoryName + "')]//input[@type='checkbox'] | " +
-            "//button[contains(normalize-space(),'" + categoryName + "')]"
-        );
-        scrollToElement(locator);
-        click(locator);
+        try { Thread.sleep(300); } catch (InterruptedException ignored) {}
         waitForProductsToLoad();
     }
 
+    private String toSortValue(String label) {
+        switch (label.toLowerCase()) {
+            case "price: low to high": case "price_asc": return "price_asc";
+            case "price: high to low": case "price_desc": return "price_desc";
+            case "best rated": case "rating": return "rating";
+            case "popular": case "most popular": return "popular";
+            default: return label;
+        }
+    }
+
     /**
-     * Filter theo brand name.
+     * Filter theo category/brand.
+     * Console xác nhận: LABEL class="flex items-center gap-2.5 cursor-pointer group"
+     * TEXT = "Gaming Mice12" (số dính liền) → dùng contains(normalize-space(), name)
+     *
+     * CSS selector cho class có spaces: dùng từng class riêng lẻ
+     * label.cursor-pointer khớp với class string chứa "cursor-pointer"
      */
-    public void filterByBrand(String brandName) {
-        openFilterSidebar();
+    public void filterByCategory(String categoryName) {
+        // outerHTML xác nhận: label > input[checkbox] + span(name) + span(count)
+        // normalize-space(label) = "Headsets10" → starts-with đúng
+        // Nhưng label có thể off-screen → dùng scrollToElement + jsClick
         By locator = By.xpath(
-            "//label[contains(normalize-space(),'" + brandName + "')]//input[@type='checkbox']"
+            "//label[contains(@class,'cursor-pointer') and " +
+            "starts-with(normalize-space(),'" + categoryName + "')]"
         );
+        // Scroll vào trước để đảm bảo visible
         scrollToElement(locator);
+        // Dùng jsClick để bypass visibility check
+        jsClick(locator);
+        try { Thread.sleep(600); } catch (InterruptedException ignored) {}
+        waitForProductsToLoad();
+    }
+
+    public void filterByBrand(String brandName) {
+        filterByCategory(brandName);
+    }
+
+    public void filterByRating(String ratingLabel) {
+        By locator = By.xpath(
+            "//label[contains(normalize-space(),'" + ratingLabel + "')]"
+        );
         click(locator);
+        try { Thread.sleep(300); } catch (InterruptedException ignored) {}
+        waitForProductsToLoad();
+    }
+
+    public void filterByPrice(String priceLabel) {
+        By locator = By.xpath(
+            "//label[contains(normalize-space(),'" + priceLabel + "')]"
+        );
+        click(locator);
+        try { Thread.sleep(300); } catch (InterruptedException ignored) {}
         waitForProductsToLoad();
     }
 
     public void clearAllFilters() {
         if (isDisplayed(clearFiltersLocator)) {
             click(clearFiltersLocator);
-            waitForProductsToLoad();
+            try { Thread.sleep(500); } catch (InterruptedException ignored) {}
+            // Scroll xuống để trigger lazy load
+            scrollToBottom();
+            try { Thread.sleep(800); } catch (InterruptedException ignored) {}
+            scrollToBottom();
+            try { Thread.sleep(500); } catch (InterruptedException ignored) {}
         }
     }
 
-    // ── View Toggle ───────────────────────────────────
-
     public void switchToGridView() {
-        if (isDisplayed(gridViewBtnLocator)) {
-            click(gridViewBtnLocator);
-        }
+        if (isDisplayed(gridViewBtnLocator)) click(gridViewBtnLocator);
     }
 
     public void switchToListView() {
-        if (isDisplayed(listViewBtnLocator)) {
-            click(listViewBtnLocator);
-        }
-    }
-
-    // ── Product Cards ─────────────────────────────────
-
-    public List<WebElement> getProductCards() {
-        try {
-            return wait.waitForMinimumElements(productCardLocator, 1);
-        } catch (Exception e) {
-            return findElements(productCardLocator);
-        }
+        if (isDisplayed(listViewBtnLocator)) click(listViewBtnLocator);
     }
 
     public int getProductCount() {
         return findElements(productCardLocator).size();
     }
 
-    /**
-     * Click vào product card theo index (0-based).
-     */
     public void clickProduct(int index) {
-        List<WebElement> cards = getProductCards();
+        List<WebElement> cards = findElements(productCardLocator);
         scrollToElement(cards.get(index));
         click(cards.get(index));
     }
 
-    /**
-     * Click vào product card theo tên sản phẩm (partial match).
-     */
     public void clickProductByName(String productName) {
         By locator = By.xpath(
-            "//*[contains(@class,'card') or contains(@class,'product')]//*[contains(normalize-space(),'"
-            + productName + "')]"
+            "//a[contains(normalize-space(),'" + productName + "') and contains(@href,'/products/')]"
         );
-        scrollToElement(locator);
         click(locator);
     }
 
-    /**
-     * Lấy tên của product card đầu tiên.
-     */
     public String getFirstProductName() {
-        return getText(productNameLocator);
+        List<WebElement> products = findElements(productCardLocator);
+        if (products.isEmpty()) return null;
+        return products.get(0).getText();
     }
 
     public boolean isNoResultsDisplayed() {

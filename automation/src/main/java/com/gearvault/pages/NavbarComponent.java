@@ -2,104 +2,98 @@ package com.gearvault.pages;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.Keys;
 
-/**
- * Page Object cho Navbar - xuất hiện trên tất cả trang.
- * Dựa trên Navbar.tsx: cart icon, search, dark mode toggle, user dropdown.
- */
 public class NavbarComponent extends BasePage {
 
-    // Logo
-    @FindBy(css = "a[href='/']")
-    private WebElement logoLink;
+    // Logo — codegen: page.getByRole('banner').getByRole('link', { name: 'GearVault' })
+    private final By logoLocator = By.xpath(
+        "//header[@role='banner']//a[normalize-space()='GearVault'] | //nav//a[normalize-space()='GearVault']"
+    );
 
-    // Navigation links
-    @FindBy(linkText = "Shop")
-    private WebElement shopLink;
+    // Shop link — codegen: page.getByRole('link', { name: 'Shop', exact: true })
+    private final By shopLinkLocator = By.xpath(
+        "//header//a[normalize-space()='Shop'] | //nav//a[normalize-space()='Shop']"
+    );
 
-    // Search
-    @FindBy(css = "button[aria-label='search'], button svg.lucide-search")
-    private WebElement searchButton;
+    // Cart button — codegen: page.getByRole('button', { name: 'Cart' })
+    // Console: TEXT: "9+" | CLASS: btn-ghost p-2.5 rounded-xl relative
+    // Cart button navigate → dùng link /cart thay vì button (button mở drawer)
+    private final By cartBtnLocator = By.xpath(
+        "//button[normalize-space()='Cart' or @aria-label='Cart']"
+    );
+    private final By cartLinkLocator = By.xpath(
+        "//a[contains(@href,'/cart')] | //a[normalize-space()='Cart']"
+    );
 
-    @FindBy(css = "input[placeholder*='Search'], input[type='search']")
-    private WebElement searchInput;
+    // User avatar button — Console: TEXT: "A" | CLASS: btn-ghost p-1 rounded-xl flex items-center gap-1
+    private final By userAvatarLocator = By.cssSelector(
+        "button.btn-ghost.p-1.rounded-xl"
+    );
 
-    // Cart
-    private final By cartButtonLocator = By.cssSelector("button[aria-label='cart'], button .lucide-shopping-cart");
-    private final By cartBadgeLocator  = By.cssSelector("[data-testid='cart-count'], .cart-badge");
+    // Sign Out — xuất hiện trong dropdown sau khi click avatar
+    private final By signOutBtnLocator = By.xpath(
+        "//button[normalize-space()='Sign Out']"
+    );
 
-    // Wishlist
-    private final By wishlistButtonLocator = By.cssSelector("a[href='/wishlist'], button .lucide-heart");
+    // Sign In link — visible khi chưa login
+    private final By signInLinkLocator = By.xpath(
+        "//a[normalize-space()='Sign In' or normalize-space()='Sign in'] | //header//a[contains(@href,'/login')]"
+    );
 
-    // Dark mode toggle
-    @FindBy(css = "button[aria-label='toggle dark mode'], button .lucide-moon, button .lucide-sun")
-    private WebElement darkModeToggle;
+    // Search button — icon kính lúp, mở overlay
+    private final By searchBtnLocator = By.xpath(
+        "//button[@aria-label='Search' or normalize-space()='Search']"
+    );
 
-    // User area
-    private final By userAvatarLocator   = By.cssSelector("button[aria-label='user menu'], button .lucide-user");
-    private final By userDropdownLocator = By.cssSelector("[data-testid='user-dropdown'], nav .dropdown-menu");
-    private final By logoutBtnLocator    = By.xpath("//button[contains(normalize-space(),'Sign out') or contains(normalize-space(),'Logout')]");
-    private final By dashboardLinkLocator = By.xpath("//a[contains(@href,'/dashboard')]");
-
-    // Sign in / Register buttons (khi chưa login)
-    private final By signInLinkLocator   = By.xpath("//a[contains(@href,'/login')]");
+    // Search input — chỉ visible SAU khi click Search button
+    private final By searchInputLocator = By.xpath(
+        "//input[contains(@placeholder,'Search for gaming') or contains(@placeholder,'Search products')]"
+    );
 
     public NavbarComponent(WebDriver driver) {
         super(driver);
     }
 
+    public void clickLogo() {
+        click(logoLocator);
+    }
+
     public void clickShop() {
-        click(By.linkText("Shop"));
+        click(shopLinkLocator);
         waitForUrlContains("/products");
     }
 
+    /**
+     * Cart button trong navbar MỞ DRAWER, không navigate đến /cart.
+     * Để navigate đến /cart, dùng navigateToCart().
+     */
     public void clickCart() {
-        click(cartButtonLocator);
+        click(cartBtnLocator);
     }
 
-    public void clickWishlist() {
-        click(wishlistButtonLocator);
-        waitForUrlContains("/wishlist");
-    }
-
-    public void openSearch() {
-        click(searchButton);
-        waitForVisible(By.cssSelector("input[placeholder*='Search']"));
-    }
-
-    public void searchFor(String query) {
-        openSearch();
-        type(By.cssSelector("input[placeholder*='Search']"), query);
-        searchInput.submit();
-        waitForUrlContains("/products?search=");
-    }
-
-    public void toggleDarkMode() {
-        click(darkModeToggle);
-    }
-
-    public void openUserDropdown() {
-        click(userAvatarLocator);
-        waitForVisible(userDropdownLocator);
+    /**
+     * Navigate trực tiếp đến /cart bằng URL.
+     * Dùng cho test cần assert URL = /cart.
+     */
+    public void navigateToCart(String baseUrl) {
+        driver.get(baseUrl + "/cart");
+        waitForUrlContains("/cart");
     }
 
     public void logout() {
-        openUserDropdown();
-        click(logoutBtnLocator);
-        waitForUrlContains("/");
-    }
-
-    public void goToDashboard() {
-        openUserDropdown();
-        click(dashboardLinkLocator);
-        waitForUrlContains("/dashboard");
+        // Avatar button: CSS selector chính xác từ console
+        click(userAvatarLocator);
+        waitForVisible(signOutBtnLocator);
+        click(signOutBtnLocator);
     }
 
     public boolean isUserLoggedIn() {
-        // Nếu có user avatar button thì đang đăng nhập
-        return isDisplayed(userAvatarLocator);
+        try {
+            return !isDisplayed(signInLinkLocator);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public boolean isSignInVisible() {
@@ -108,9 +102,19 @@ public class NavbarComponent extends BasePage {
 
     public String getCartItemCount() {
         try {
-            return getText(cartBadgeLocator);
+            // Console: TEXT: "9+" | CLASS: btn-ghost p-2.5 rounded-xl relative
+            By badgeLocator = By.cssSelector("button.btn-ghost.rounded-xl.relative span");
+            return getText(badgeLocator);
         } catch (Exception e) {
             return "0";
         }
+    }
+
+    public void searchFor(String query) {
+        click(searchBtnLocator);
+        waitForVisible(searchInputLocator);
+        type(searchInputLocator, query);
+        driver.findElement(searchInputLocator).sendKeys(Keys.ENTER);
+        waitForUrlContains("/products");
     }
 }

@@ -1,4 +1,7 @@
+com\gearvault\tests\CheckoutTest.class
+com\gearvault\tests\ProductFilterTest.class
 com\gearvault\tests\LoginTest.class
+com\gearvault\tests\LogoutAndNavTest.class
 com\gearvault\tests\RegisterTest.class
 com\gearvault\tests\BaseTest.class
 com\gearvault\tests\CartTest.class

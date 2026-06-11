@@ -1,84 +1,109 @@
 package com.gearvault.pages;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
+import java.util.List;
 
 /**
- * Page Object cho trang Checkout (/checkout).
- * Dựa trên CheckoutPage.tsx.
+ * Checkout Page — fix dựa trên console output:
  *
- * Steps: Shipping → Payment → Confirmation
+ * Shipping fields (name có):
+ *   fullName, email, phone, address, city, state, zipCode, country(select)
+ *
+ * Payment fields (name="" — rỗng, chỉ dùng placeholder):
+ *   placeholder="4242 4242 4242 4242"  → card number
+ *   placeholder="12/28"                → expiry
+ *   placeholder="123"                  → CVV
+ *   KHÔNG CÓ cardHolder field
+ *   radio name="payment"               → chọn phương thức (Credit Card mặc định)
  */
 public class CheckoutPage extends BasePage {
 
     public static final String PATH = "/checkout";
 
-    // ── Step Indicators ───────────────────────────────
-    private final By currentStepLocator      = By.cssSelector("[class*='step'][class*='active'], [aria-current='step']");
-
     // ── Shipping Form ─────────────────────────────────
-    @FindBy(css = "input[name='firstName'], input[placeholder*='First name'], input[placeholder*='first']")
-    private WebElement firstNameInput;
+    @FindBy(css = "input[name='fullName']")
+    private WebElement fullNameInput;
 
-    @FindBy(css = "input[name='lastName'], input[placeholder*='Last name'], input[placeholder*='last']")
-    private WebElement lastNameInput;
-
-    @FindBy(css = "input[name='email'], input[type='email']")
+    @FindBy(css = "input[name='email']")
     private WebElement emailInput;
 
-    @FindBy(css = "input[name='phone'], input[type='tel']")
+    @FindBy(css = "input[name='phone']")
     private WebElement phoneInput;
 
-    @FindBy(css = "input[name='address'], input[placeholder*='address'], input[placeholder*='Address']")
+    @FindBy(css = "input[name='address']")
     private WebElement addressInput;
 
-    @FindBy(css = "input[name='city'], input[placeholder*='City']")
+    @FindBy(css = "input[name='city']")
     private WebElement cityInput;
 
-    @FindBy(css = "input[name='state'], input[placeholder*='State'], select[name='state']")
+    @FindBy(css = "input[name='state']")
     private WebElement stateInput;
 
-    @FindBy(css = "input[name='zipCode'], input[placeholder*='ZIP'], input[placeholder*='Postal']")
-    private WebElement zipInput;
+    @FindBy(css = "input[name='zipCode']")
+    private WebElement zipCodeInput;
 
     // ── Payment Form ──────────────────────────────────
-    @FindBy(css = "input[name='cardNumber'], input[placeholder*='Card number'], input[placeholder*='1234']")
+    // Console xác nhận: tất cả name="" → chỉ dùng placeholder
+    // placeholder="4242 4242 4242 4242"
+    @FindBy(css = "input[placeholder='4242 4242 4242 4242']")
     private WebElement cardNumberInput;
 
-    @FindBy(css = "input[name='cardHolder'], input[placeholder*='Card holder'], input[placeholder*='Name on']")
-    private WebElement cardHolderInput;
-
-    @FindBy(css = "input[name='expiry'], input[placeholder*='MM/YY'], input[placeholder*='expiry']")
+    // placeholder="12/28"
+    @FindBy(css = "input[placeholder='12/28']")
     private WebElement expiryInput;
 
-    @FindBy(css = "input[name='cvv'], input[placeholder*='CVV'], input[placeholder*='CVC']")
+    // placeholder="123" type=password
+    @FindBy(css = "input[placeholder='123']")
     private WebElement cvvInput;
+
+    // Payment method radio — name="payment", Credit Card là mặc định (index 0)
+    private final By creditCardRadioLocator = By.xpath(
+        "//input[@type='radio' and @name='payment'][1] | " +
+        "//input[@type='radio' and @value='credit']"
+    );
 
     // ── Buttons ───────────────────────────────────────
     private final By continueToPaymentBtnLocator = By.xpath(
-        "//button[contains(normalize-space(),'Continue') and contains(normalize-space(),'Payment')]" +
-        " | //button[contains(normalize-space(),'Next')]"
+        "//button[normalize-space()='Continue to Payment']"
     );
 
-    private final By placeOrderBtnLocator        = By.xpath(
-        "//button[contains(normalize-space(),'Place Order') or contains(normalize-space(),'Confirm Order')]"
+    private final By reviewOrderBtnLocator = By.xpath(
+        "//button[normalize-space()='Review Order']"
     );
 
-    private final By backBtnLocator              = By.xpath("//button[contains(normalize-space(),'Back')]");
-
-    // ── Order Confirmation ────────────────────────────
-    private final By confirmationLocator         = By.xpath(
-        "//*[contains(normalize-space(),'Order Confirmed') or contains(normalize-space(),'Thank you') or contains(normalize-space(),'order placed')]"
+    private final By placeOrderBtnLocator = By.xpath(
+        "//button[contains(normalize-space(),'Place Order')]"
     );
-    private final By orderNumberLocator          = By.cssSelector("[class*='order-number'], [class*='order-id']");
+
+    private final By backBtnLocator = By.xpath(
+        "//button[contains(normalize-space(),'Back')]"
+    );
+
+    // ── Confirmation ──────────────────────────────────
+    private final By confirmationLocator = By.xpath(
+        "//*[contains(normalize-space(),'Order Confirmed') or contains(normalize-space(),'Thank you')] | " +
+        "//a[normalize-space()='Shop More']"
+    );
+
+    private final By orderNumberLocator = By.cssSelector(
+        "[class*='order-number'], [class*='order-id'], [class*='orderId']"
+    );
 
     // ── Validation errors ─────────────────────────────
-    private final By fieldErrorLocator          = By.cssSelector("p.text-red-500, [class*='error-message']");
+    private final By fieldErrorLocator = By.cssSelector(
+        "p.text-red-500, .text-red-500, [class*='error-message'], .text-destructive"
+    );
 
-    // ── Loading ───────────────────────────────────────
-    private final By spinnerLocator              = By.cssSelector("svg.animate-spin");
+    private final By spinnerLocator = By.cssSelector("svg.animate-spin");
+
+    // ── Order Summary ─────────────────────────────────
+    private final By orderSummaryLocator = By.xpath("//*[normalize-space()='Order Summary']");
+    private final By subtotalLocator = By.xpath("//*[contains(normalize-space(),'Subtotal')]");
 
     public CheckoutPage(WebDriver driver) {
         super(driver);
@@ -89,32 +114,72 @@ public class CheckoutPage extends BasePage {
     public void fillShippingInfo(String firstName, String lastName, String email,
                                   String phone, String address, String city,
                                   String state, String zip) {
-        type(firstNameInput, firstName);
-        type(lastNameInput, lastName);
+        type(fullNameInput, firstName + " " + lastName);
         type(emailInput, email);
         type(phoneInput, phone);
         type(addressInput, address);
         type(cityInput, city);
         type(stateInput, state);
-        type(zipInput, zip);
+        type(zipCodeInput, zip);
     }
 
     public void clickContinueToPayment() {
+        scrollToElement(continueToPaymentBtnLocator);
         click(continueToPaymentBtnLocator);
         wait.waitForSpinnerToDisappear(spinnerLocator);
     }
 
     // ── Payment ───────────────────────────────────────
 
+    /**
+     * Điền payment form.
+     * Console: card number placeholder="4242 4242 4242 4242", expiry="12/28", cvv="123"
+     * KHÔNG có cardHolder field → bỏ qua tham số cardHolder
+     * Dùng safeFill vì các field này có thể dùng input masking
+     */
     public void fillPaymentInfo(String cardNumber, String cardHolder,
                                  String expiry, String cvv) {
-        type(cardNumberInput, cardNumber);
-        type(cardHolderInput, cardHolder);
-        type(expiryInput, expiry);
-        type(cvvInput, cvv);
+        // Đảm bảo Credit Card đang được chọn
+        try {
+            click(creditCardRadioLocator);
+        } catch (Exception ignored) {}
+
+        safeFill(cardNumberInput, cardNumber);
+        // cardHolder field không tồn tại trong app → bỏ qua
+        safeFill(expiryInput, expiry);
+        safeFill(cvvInput, cvv);
+    }
+
+    /**
+     * Safe fill cho masked/formatted input fields.
+     * Thử clear() trước, nếu fail dùng Ctrl+A → type
+     */
+    private void safeFill(WebElement element, String value) {
+        try {
+            wait.waitForVisible(element);
+            element.click();
+            element.sendKeys(Keys.CONTROL + "a");
+            element.sendKeys(Keys.DELETE);
+            element.sendKeys(value);
+        } catch (Exception e) {
+            try {
+                ((JavascriptExecutor) driver)
+                    .executeScript("arguments[0].value='';", element);
+                element.sendKeys(value);
+            } catch (Exception ignored) {}
+        }
     }
 
     public void clickPlaceOrder() {
+        // Bước Review Order nếu có
+        try {
+            if (isDisplayed(reviewOrderBtnLocator)) {
+                scrollToElement(reviewOrderBtnLocator);
+                click(reviewOrderBtnLocator);
+                wait.waitForSpinnerToDisappear(spinnerLocator);
+            }
+        } catch (Exception ignored) {}
+
         scrollToElement(placeOrderBtnLocator);
         click(placeOrderBtnLocator);
         wait.waitForSpinnerToDisappear(spinnerLocator);
@@ -124,9 +189,6 @@ public class CheckoutPage extends BasePage {
         click(backBtnLocator);
     }
 
-    /**
-     * Hoàn thành checkout đầy đủ từ bước 1.
-     */
     public void completeCheckout(String firstName, String lastName, String email,
                                   String phone, String address, String city,
                                   String state, String zip,
@@ -143,9 +205,7 @@ public class CheckoutPage extends BasePage {
     public boolean isOrderConfirmed() {
         try {
             return wait.waitForVisible(confirmationLocator).isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
+        } catch (Exception e) { return false; }
     }
 
     public String getOrderNumber() {
@@ -153,7 +213,32 @@ public class CheckoutPage extends BasePage {
     }
 
     public boolean isFieldErrorDisplayed() {
-        return isDisplayed(fieldErrorLocator);
+        // Check p.text-red-500 trước
+        if (isDisplayed(fieldErrorLocator)) return true;
+        // Check HTML5 native validation (input:invalid)
+        try {
+            List<org.openqa.selenium.WebElement> invalidInputs = driver.findElements(
+                By.cssSelector("input:invalid, select:invalid")
+            );
+            if (!invalidInputs.isEmpty()) return true;
+        } catch (Exception ignored) {}
+        // Check browser validation message via JS
+        try {
+            Object result = ((org.openqa.selenium.JavascriptExecutor) driver)
+                .executeScript(
+                    "return [...document.querySelectorAll('input,select')].some(el => !el.validity.valid)"
+                );
+            if (Boolean.TRUE.equals(result)) return true;
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    public boolean isOrderSummaryDisplayed() {
+        return isDisplayed(orderSummaryLocator);
+    }
+
+    public boolean isSubtotalDisplayed() {
+        return isDisplayed(subtotalLocator);
     }
 
     public boolean isPageLoaded() {

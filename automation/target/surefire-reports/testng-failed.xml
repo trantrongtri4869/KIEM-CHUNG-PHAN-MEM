@@ -3,55 +3,45 @@
 <suite name="Failed suite [Surefire suite]" verbose="0">
   <test thread-count="5" name="Surefire test(failed)" verbose="0">
     <classes>
-      <class name="com.gearvault.tests.LoginTest">
-        <methods>
-          <include name="testLoginSuccessAsUser"/>
-          <include name="setUpSuite"/>
-          <include name="testLoginSuccessAsAdmin"/>
-          <include name="tearDownSuite"/>
-          <include name="openLoginPage"/>
-          <include name="setUp"/>
-          <include name="tearDown"/>
-        </methods>
-      </class> <!-- com.gearvault.tests.LoginTest -->
       <class name="com.gearvault.tests.ProductTest">
         <methods>
           <include name="testQuantityControls"/>
           <include name="testProductSearchNoResults"/>
           <include name="setUpSuite"/>
-          <include name="testProductDetailPageInfo"/>
           <include name="tearDownSuite"/>
           <include name="setUp"/>
           <include name="tearDown"/>
-          <include name="testAddToCartFromDetailPage"/>
-          <include name="testProductDetailTabs"/>
         </methods>
       </class> <!-- com.gearvault.tests.ProductTest -->
       <class name="com.gearvault.tests.CartTest">
         <methods>
-          <include name="testApplyValidCoupon"/>
-          <include name="testAddProductToCart"/>
           <include name="setUpSuite"/>
           <include name="tearDownSuite"/>
           <include name="setUp"/>
-          <include name="testProceedToCheckout"/>
           <include name="tearDown"/>
           <include name="testIncreaseQuantityInCart"/>
-          <include name="testShippingCostDisplayed"/>
-          <include name="testApplyInvalidCoupon"/>
-          <include name="testRemoveItemFromCart"/>
         </methods>
       </class> <!-- com.gearvault.tests.CartTest -->
-      <class name="com.gearvault.tests.RegisterTest">
+      <class name="com.gearvault.tests.ProductFilterTest">
         <methods>
-          <include name="testPasswordStrengthIndicator" invocation-numbers="0"/>
+          <include name="setUpSuite"/>
+          <include name="testClearAllFilters"/>
+          <include name="tearDownSuite"/>
+          <include name="setUp"/>
+          <include name="openProductsPage"/>
+          <include name="tearDown"/>
+        </methods>
+      </class> <!-- com.gearvault.tests.ProductFilterTest -->
+      <class name="com.gearvault.tests.LogoutAndNavTest">
+        <methods>
+          <include name="testLogoutSuccess"/>
           <include name="setUpSuite"/>
           <include name="tearDownSuite"/>
           <include name="setUp"/>
           <include name="tearDown"/>
-          <include name="openRegisterPage"/>
+          <include name="testCheckoutProtectedAfterLogout"/>
         </methods>
-      </class> <!-- com.gearvault.tests.RegisterTest -->
+      </class> <!-- com.gearvault.tests.LogoutAndNavTest -->
     </classes>
   </test> <!-- Surefire test(failed) -->
 </suite> <!-- Failed suite [Surefire suite] -->

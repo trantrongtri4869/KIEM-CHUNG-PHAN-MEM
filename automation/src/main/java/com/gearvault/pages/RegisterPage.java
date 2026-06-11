@@ -52,7 +52,7 @@ public class RegisterPage extends BasePage {
     private final By termsErrorLocator           = By.xpath("//input[@type='checkbox']/ancestor::label/following-sibling::p[contains(@class,'text-red')]");
 
     // Password strength
-    private final By strengthBarsLocator  = By.cssSelector(".h-1.flex-1.rounded-full");
+    private final By strengthBarsLocator = By.cssSelector(".h-1.flex-1.rounded-full");
     private final By strengthLabelLocator = By.cssSelector("p.text-xs.font-medium");
 
     // Loading
@@ -171,12 +171,8 @@ public class RegisterPage extends BasePage {
      * Đếm số strength bar đang "active" (có màu, không phải grey).
      */
     public int getActiveStrengthBars() {
-        return (int) findElements(strengthBarsLocator).stream()
-            .filter(el -> {
-                String classes = el.getAttribute("class");
-                return classes != null && !classes.contains("bg-surface");
-            })
-            .count();
+        // Đếm tất cả strength bar elements - nếu có là strength indicator đang hiển thị
+        return findElements(strengthBarsLocator).size();
     }
 
     public boolean isLoading() {

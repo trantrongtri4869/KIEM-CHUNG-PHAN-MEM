@@ -1,0 +1,16 @@
+{
+  "name": "automation",
+  "version": "1.0.0",
+  "description": "Framework automation test cho ứng dụng GearVault E-Commerce, sử dụng: - **Java 11+** - **Selenium WebDriver 4.x** - **TestNG 7.x** - **Page Object Model (POM)** - **Explicit Wait** (không dùng `Thread.sleep`) - **ExtentReports** (HTML report đẹp) - **WebDriverManager** (tự động download driver)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
+  }
+}

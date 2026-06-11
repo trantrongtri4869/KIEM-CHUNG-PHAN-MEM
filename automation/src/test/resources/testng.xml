@@ -1,16 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 
-<!--
-    GearVault Test Suite
-    Run: mvn test
-    Run smoke only: mvn test -Dgroups=smoke
--->
 <suite name="GearVault Automation Suite" verbose="1" parallel="none">
 
-    <!-- ─────────────────────────────────────────── -->
-    <!-- Smoke Tests: chạy nhanh các luồng chính    -->
-    <!-- ─────────────────────────────────────────── -->
     <test name="Smoke Tests">
         <groups>
             <run>
@@ -22,12 +14,12 @@
             <class name="com.gearvault.tests.RegisterTest"/>
             <class name="com.gearvault.tests.ProductTest"/>
             <class name="com.gearvault.tests.CartTest"/>
+            <class name="com.gearvault.tests.CheckoutTest"/>        <!-- thêm -->
+            <class name="com.gearvault.tests.LogoutAndNavTest"/>    <!-- thêm -->
+            <class name="com.gearvault.tests.ProductFilterTest"/>   <!-- thêm -->
         </classes>
     </test>
 
-    <!-- ─────────────────────────────────────────── -->
-    <!-- Full Regression Tests                       -->
-    <!-- ─────────────────────────────────────────── -->
     <test name="Authentication Tests">
         <classes>
             <class name="com.gearvault.tests.LoginTest"/>
@@ -38,16 +30,23 @@
     <test name="Product Tests">
         <classes>
             <class name="com.gearvault.tests.ProductTest"/>
+            <class name="com.gearvault.tests.ProductFilterTest"/>   <!-- thêm -->
         </classes>
     </test>
 
     <test name="Cart and Checkout Tests">
         <classes>
             <class name="com.gearvault.tests.CartTest"/>
+            <class name="com.gearvault.tests.CheckoutTest"/>        <!-- thêm -->
         </classes>
     </test>
 
-    <!-- Listeners: ExtentReport + Screenshot -->
+    <test name="Navigation Tests">                                  <!-- block mới -->
+        <classes>
+            <class name="com.gearvault.tests.LogoutAndNavTest"/>
+        </classes>
+    </test>
+
     <listeners>
         <listener class-name="org.testng.reporters.SuiteHTMLReporter"/>
     </listeners>

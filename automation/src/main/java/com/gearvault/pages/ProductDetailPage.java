@@ -7,92 +7,64 @@ import org.openqa.selenium.support.FindBy;
 
 import java.util.List;
 
-/**
- * Page Object cho trang Product Detail (/products/:slug).
- * Dựa trên ProductDetailPage.tsx.
- *
- * Sections:
- * - Breadcrumb
- * - Image gallery (main + thumbnails)
- * - Product info: name, price, rating, stock, brand
- * - Quantity selector
- * - Add to Cart / Buy Now / Wishlist buttons
- * - Tabs: Overview | Specs | Reviews
- * - Review form (khi đã login)
- * - Related products
- */
 public class ProductDetailPage extends BasePage {
 
-    // ── Breadcrumb ────────────────────────────────────
-    private final By breadcrumbLocator        = By.cssSelector("nav[aria-label='breadcrumb'] a, nav.flex a");
+    @FindBy(css = "h1")
+    private WebElement productNameHeading;
 
-    // ── Image Gallery ─────────────────────────────────
-    private final By mainImageLocator         = By.cssSelector(".img-zoom-container img");
-    private final By thumbnailLocator         = By.cssSelector(".w-20.h-20.rounded-xl button img");
+    private final By priceLocator = By.xpath(
+        "//*[contains(@class,'text-3xl') or contains(@class,'font-bold')][contains(normalize-space(),'$')] | " +
+        "//span[contains(@class,'text-brand')]"
+    );
 
-    // ── Product Info ──────────────────────────────────
-    private final By productNameLocator       = By.cssSelector("h1.text-3xl");
-    private final By priceLocator             = By.xpath("//p[contains(@class,'text-3xl') or contains(@class,'font-bold')]");
-    private final By originalPriceLocator     = By.cssSelector("span.line-through");
-    private final By discountBadgeLocator     = By.cssSelector(".badge.bg-red-500");
-    private final By stockStatusLocator       = By.xpath("//*[contains(normalize-space(),'In Stock') or contains(normalize-space(),'Out of Stock') or contains(normalize-space(),'stock')]");
-    private final By ratingLocator            = By.cssSelector(".flex.items-center span");
+    private final By stockStatusLocator = By.xpath(
+        "//*[contains(normalize-space(),'In Stock') or contains(normalize-space(),'Out of Stock')]"
+    );
 
-    // ── Quantity ──────────────────────────────────────
-    private final By minusBtnLocator          = By.xpath("//button[.//svg[contains(@class, 'lucide-minus')]]");
-    private final By plusBtnLocator           = By.xpath("//button[.//svg[contains(@class, 'lucide-plus')]]");
-    private final By quantityDisplayLocator   = By.xpath("//input[@type='number']");
+    private final By discountBadgeLocator = By.cssSelector("span[class*='bg-red'], span[class*='discount']");
+    private final By originalPriceLocator = By.cssSelector("span.line-through");
 
-    // ── Action Buttons ────────────────────────────────
-    @FindBy(xpath = "//button[contains(normalize-space(),'Add to Cart')]")
+    // Quantity buttons — console xác nhận: CLASS "w-10 h-10 flex items-center justify-center..."
+    // Có 3 nút w-10: [close button (absolute top-4)][minus][plus]
+    // → loại trừ nút absolute (close/back) bằng :not([class*='absolute'])
+    private final By quantityBtnsLocator = By.cssSelector(
+        "button.w-10.h-10:not([class*='absolute'])"
+    );
+
+    // Quantity display — span chứa số lượng (text = "1", "2", ...)
+    private final By quantityDisplayLocator = By.cssSelector(
+        "span.w-8, span.font-semibold.w-8, span.text-center.w-8"
+    );
+
+    @FindBy(xpath = "//button[contains(normalize-space(),'Add to Cart') or contains(normalize-space(),'Add To Cart')]")
     private WebElement addToCartBtn;
 
     @FindBy(xpath = "//button[contains(normalize-space(),'Buy Now')]")
     private WebElement buyNowBtn;
 
-    @FindBy(xpath = "//button[.//svg[contains(@class, 'lucide-heart')]]")
+    @FindBy(css = "button:has(svg.lucide-heart)")
     private WebElement wishlistBtn;
 
-    // ── Tabs ──────────────────────────────────────────
-    @FindBy(xpath = "//button[contains(normalize-space(),'Overview')]")
-    private WebElement overviewTab;
+    private final By overviewTabLocator = By.xpath("//button[contains(normalize-space(),'overview') or contains(normalize-space(),'Overview')]");
+    private final By specsTabLocator    = By.xpath("//button[contains(normalize-space(),'specs') or contains(normalize-space(),'Specs')]");
+    private final By reviewsTabLocator  = By.xpath("//button[contains(normalize-space(),'reviews') or contains(normalize-space(),'Reviews')]");
 
-    @FindBy(xpath = "//button[contains(normalize-space(),'Specs')]")
-    private WebElement specsTab;
+    private final By toastLocator = By.xpath(
+        "//*[contains(normalize-space(),'added to cart') or contains(normalize-space(),'Added to cart')]"
+    );
 
-    @FindBy(xpath = "//button[contains(normalize-space(),'Reviews')]")
-    private WebElement reviewsTab;
-
-    // ── Review Form ───────────────────────────────────
-    private final By reviewTextareaLocator    = By.cssSelector("textarea");
-    private final By submitReviewBtnLocator   = By.xpath("//button[@type='submit']");
-
-    // ── Related Products ──────────────────────────────
-    private final By relatedProductLocator    = By.cssSelector("a.group.block");
-
-    // ── Toast / Notification ──────────────────────────
-    private final By toastLocator             = By.xpath("//*[contains(@class, 'hot-toast') or contains(@class, 'toast')]");
+    private final By relatedProductLocator = By.cssSelector("[class*='related'] a, [class*='related'] article");
 
     public ProductDetailPage(WebDriver driver) {
         super(driver);
     }
 
-    // ── Image Gallery ─────────────────────────────────
-
-    public void clickThumbnail(int index) {
-        List<WebElement> thumbs = wait.waitForMinimumElements(thumbnailLocator, 1);
-        if (index < thumbs.size()) {
-            click(thumbs.get(index));
-        }
-    }
-
-    // ── Product Info ──────────────────────────────────
-
     public String getProductName() {
-        return getText(productNameLocator);
+        return getText(productNameHeading);
     }
 
     public String getPrice() {
+        waitForVisible(priceLocator);
         return getText(priceLocator);
     }
 
@@ -109,37 +81,54 @@ public class ProductDetailPage extends BasePage {
         }
     }
 
-    // ── Quantity ──────────────────────────────────────
+    /**
+     * Lấy quantity buttons, loại trừ nút close (có class 'absolute').
+     * Selenium CSS :not() không hỗ trợ class substring → dùng Java filter.
+     */
+    private List<WebElement> getQuantityButtons() {
+        List<WebElement> all = findElements(By.cssSelector("button.w-10.h-10"));
+        List<WebElement> filtered = new java.util.ArrayList<>();
+        for (WebElement btn : all) {
+            String cls = btn.getAttribute("class");
+            if (cls != null && !cls.contains("absolute")) {
+                filtered.add(btn);
+            }
+        }
+        return filtered;
+    }
 
     public void increaseQuantity(int times) {
         for (int i = 0; i < times; i++) {
-            click(plusBtnLocator);
+            List<WebElement> btns = getQuantityButtons();
+            if (btns.size() >= 2) {
+                click(btns.get(1)); // index 1 = nút +
+                try { Thread.sleep(300); } catch (InterruptedException ignored) {}
+            }
         }
     }
 
     public void decreaseQuantity(int times) {
         for (int i = 0; i < times; i++) {
-            click(minusBtnLocator);
+            List<WebElement> btns = getQuantityButtons();
+            if (!btns.isEmpty()) {
+                click(btns.get(0)); // index 0 = nút -
+                try { Thread.sleep(300); } catch (InterruptedException ignored) {}
+            }
         }
     }
 
     public int getQuantity() {
         try {
-            WebElement quantityInput = driver.findElement(quantityDisplayLocator);
-            String value = quantityInput.getAttribute("value");
-            return value != null && !value.isEmpty() ? Integer.parseInt(value) : 1;
+            return Integer.parseInt(getText(quantityDisplayLocator).trim());
         } catch (Exception e) {
             return 1;
         }
     }
 
-    // ── Action Buttons ────────────────────────────────
-
     public void clickAddToCart() {
         scrollToElement(addToCartBtn);
         click(addToCartBtn);
-        // Chờ toast notification xuất hiện
-        wait.waitForVisible(toastLocator);
+        waitForVisible(toastLocator);
     }
 
     public void clickBuyNow() {
@@ -157,47 +146,23 @@ public class ProductDetailPage extends BasePage {
         return isEnabled(By.xpath("//button[contains(normalize-space(),'Add to Cart')]"));
     }
 
-    public boolean isWishlistActive() {
-        String classes = wishlistBtn.getAttribute("class");
-        return classes != null && (classes.contains("text-red") || classes.contains("fill-red"));
-    }
-
-    // ── Tabs ──────────────────────────────────────────
-
-    public void clickOverviewTab() {
-        click(overviewTab);
-    }
+    public void clickOverviewTab() { click(overviewTabLocator); }
 
     public void clickSpecsTab() {
-        click(specsTab);
-        waitForVisible(By.xpath("//table | //*[contains(@class,'specs')]"));
+        click(specsTabLocator);
+        waitForVisible(By.cssSelector("table, [class*='specs']"));
     }
 
-    public void clickReviewsTab() {
-        click(reviewsTab);
+    public void clickReviewsTab() { click(reviewsTabLocator); }
+
+    public boolean isPageLoaded() {
+        return isDisplayed(By.cssSelector("h1")) && getCurrentUrl().contains("/products/");
     }
 
-    // ── Review Form ───────────────────────────────────
-
-    public void writeReview(int starRating, String reviewText) {
-        clickReviewsTab();
-        // Click star rating (1-5)
-        By starLocator = By.cssSelector(
-            "[class*='star-rating'] button:nth-child(" + starRating + "), " +
-            "button[data-rating='" + starRating + "']"
-        );
-        if (isDisplayed(starLocator)) {
-            click(starLocator);
-        }
-        type(reviewTextareaLocator, reviewText);
-        click(submitReviewBtnLocator);
+    public String getToastMessage() {
+        waitForVisible(toastLocator);
+        return getText(toastLocator);
     }
-
-    public boolean isReviewFormVisible() {
-        return isDisplayed(reviewTextareaLocator);
-    }
-
-    // ── Related Products ──────────────────────────────
 
     public int getRelatedProductCount() {
         try {
@@ -205,21 +170,5 @@ public class ProductDetailPage extends BasePage {
         } catch (Exception e) {
             return 0;
         }
-    }
-
-    public void clickFirstRelatedProduct() {
-        List<WebElement> related = wait.waitForMinimumElements(relatedProductLocator, 1);
-        scrollToElement(related.get(0));
-        click(related.get(0));
-    }
-
-    // ── Page State ────────────────────────────────────
-
-    public boolean isPageLoaded() {
-        return isDisplayed(By.cssSelector("h1")) && getCurrentUrl().contains("/products/");
-    }
-
-    public String getToastMessage() {
-        return getText(toastLocator);
     }
 }
