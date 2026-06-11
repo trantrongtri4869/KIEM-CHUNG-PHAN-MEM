@@ -431,9 +431,9 @@ jobs:
       - name: Run Postman Collection (Newman)
         run: |
           # Nếu có file collection thì chạy thật, không thì simulate
-          if [ -f "postman/gearvault.postman_collection.json" ]; then
-            newman run postman/gearvault.postman_collection.json \
-              --environment postman/dev.postman_environment.json \
+          if [ -f "gearvault/backend/postman/GearVault.postman_collection.json" ]; then
+            newman run gearvault/backend/postman/GearVault.postman_collection.json \
+              --environment gearvault/backend/postman/dev.postman_environment.json \
               --reporters cli,htmlextra \
               --reporter-htmlextra-export postman-report.html \
               --suppress-exit-code
