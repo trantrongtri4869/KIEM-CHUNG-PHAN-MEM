@@ -113,14 +113,34 @@
         {
           "name": "Get All Products",
           "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+           "pm.test('Status 200', () => pm.response.to.have.status(200));",
             "pm.test('success = true', () => pm.expect(pm.response.json().success).to.be.true);",
             "pm.test('data là array', () => pm.expect(pm.response.json().data).to.be.an('array'));",
-            "pm.test('Có pagination', () => pm.expect(pm.response.json().pagination).to.be.an('object'));",
+           "pm.test('Có pagination', () => pm.expect(pm.response.json().pagination).to.be.an('object'));",
             "if (pm.response.json().data.length > 0) {",
-            "  pm.collectionVariables.set('product_id', pm.response.json().data[0]._id);",
-            "  pm.collectionVariables.set('product_slug', pm.response.json().data[0].slug);",
-            "}"
+              "pm.collectionVariables.set('product_id', pm.response.json().data[0]._id);",
+              "pm.collectionVariables.set('product_slug', pm.response.json().data[0].slug);",
+            "}",
+            "pm.test('Status code is 200', function () {",
+                "pm.response.to.have.status(200);",
+            "});",
+
+            "pm.test('Response is JSON', function () {",
+                "pm.response.to.have.header('Content-Type', 'application/json; charset=utf-8');",
+            "});",
+
+            "console.log(pm.response.json());",
+            "pm.test('Response is an array', function () {",
+                "var jsonData = pm.response.json();",
+                "pm.expect(jsonData.data).to.be.an('array');",
+            "});",
+
+            "pm.test('First product has a name', function () {",
+                "var jsonData = pm.response.json();",
+                "if(jsonData.length > 0) {",
+                    "pm.expect(jsonData[0]).to.have.property('name');",
+                "}",
+            "});"
           ]}}],
           "request": {
             "method": "GET",
