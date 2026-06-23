@@ -7,6 +7,11 @@ const router = express.Router()
 router.post('/', protect, async (req, res) => {
   try {
     const { items, shippingAddress, paymentMethod, couponCode } = req.body
+    for (const item of items) {
+      if (item.quantity < 1) {
+        return res.status(400).json({ success: false, message: `Số lượng sản phẩm ${item.name} không hợp lệ` })
+      }
+    }
     let couponDiscount = 0
 
     if (couponCode) {
@@ -72,6 +77,10 @@ router.get('/:id', protect, async (req, res) => {
 router.put('/:id/status', protect, adminOnly, async (req, res) => {
   try {
     const { status } = req.body
+    const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled']
+    if (!validStatuses.includes(status)) {
+        return res.status(400).json({ success: false, message: "Trạng thái không hợp lệ" })
+    }
     const update = { status }
     if (status === 'delivered') { update.isDelivered = true; update.deliveredAt = new Date() }
     const order = await Order.findByIdAndUpdate(req.params.id, update, { new: true })
