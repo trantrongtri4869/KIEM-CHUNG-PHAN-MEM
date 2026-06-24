@@ -400,6 +400,7 @@ jobs:
   # ─────────────────────────────────────────
   # 8. POSTMAN API TEST (Dev environment)
   #    Ảnh 1: Postman → deploy (version)
+  #    → Tự động tạo Bug trên Jira nếu fail
   # ─────────────────────────────────────────
   postman-test:
     name: 📮 Postman API Test
@@ -414,7 +415,14 @@ jobs:
           node-version: '18'
 
       - name: Install Newman (Postman CLI)
-        run: npm install -g newman newman-reporter-htmlextra
+        run: npm install -g newman newman-reporter-htmlextra newman-reporter-json
+
+      - name: Start MongoDB for Postman
+        run: |
+          sudo systemctl start mongod || true
+          sleep 3
+          echo "✅ MongoDB started"
+        continue-on-error: true
 
       - name: Start Backend for Postman
         working-directory: ./gearvault/backend
@@ -430,63 +438,142 @@ jobs:
 
       - name: Run Postman Collection (Newman)
         run: |
-          # Nếu có file collection thì chạy thật, không thì simulate
-          if [ -f "gearvault/backend/postman/GearVault.postman_collection.json" ]; then
-            newman run gearvault/backend/postman/GearVault.postman_collection.json \
-              --environment gearvault/backend/postman/dev.postman_environment.json \
-              --reporters cli,htmlextra \
-              --reporter-htmlextra-export postman-report.html \
-              --suppress-exit-code
-          else
-            echo "=== Postman API Test (Simulated) ==="
-            echo "📮 No collection file found, running curl-based API verification..."
+          VERSION="1.0.${{ github.run_number }}"
+          echo "DEPLOY_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "🏷️ Deploy Version: $VERSION"
 
-            VERSION="1.0.${{ github.run_number }}"
-            echo "🏷️ Deploy Version: $VERSION"
+          newman run gearvault/backend/postman/GearVault.postman_collection.json \
+            --environment gearvault/backend/postman/dev.postman_environment.json \
+            --reporters cli,htmlextra,json \
+            --reporter-htmlextra-export postman-report.html \
+            --reporter-json-export postman-results.json \
+            --suppress-exit-code
+        continue-on-error: true
 
-            declare -A TESTS
-            TESTS["/api/health"]="200"
-            TESTS["/api/products"]="200"
-            TESTS["/api/auth/login"]="400"
+      - name: Parse Newman Results
+        run: |
+          if [ -f "postman-results.json" ]; then
+            PASS=$(cat postman-results.json | python3 -c "
+          import json,sys
+          d = json.load(sys.stdin)
+          stats = d.get('run',{}).get('stats',{}).get('assertions',{})
+          print(stats.get('total',0) - stats.get('failed',0))
+          " 2>/dev/null || echo "0")
 
-            PASS=0; FAIL=0
-            for endpoint in "${!TESTS[@]}"; do
-              EXPECTED="${TESTS[$endpoint]}"
-              STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-                -X POST http://localhost:5000$endpoint \
-                -H "Content-Type: application/json" \
-                -d '{}' 2>/dev/null || echo "000")
-              if [ "$STATUS" = "$EXPECTED" ] || [ "$STATUS" != "000" ]; then
-                echo "✅ $endpoint → HTTP $STATUS"
-                PASS=$((PASS+1))
-              else
-                echo "❌ $endpoint → HTTP $STATUS (expected $EXPECTED)"
-                FAIL=$((FAIL+1))
-              fi
-            done
+            FAIL=$(cat postman-results.json | python3 -c "
+          import json,sys
+          d = json.load(sys.stdin)
+          stats = d.get('run',{}).get('stats',{}).get('assertions',{})
+          print(stats.get('failed',0))
+          " 2>/dev/null || echo "0")
+
+            # Lấy danh sách test case bị fail
+            FAIL_DETAILS=$(cat postman-results.json | python3 -c "
+          import json,sys
+          d = json.load(sys.stdin)
+          fails = []
+          for ex in d.get('run',{}).get('executions',[]):
+              req_name = ex.get('item',{}).get('name','Unknown')
+              for a in ex.get('assertions',[]):
+                  if a.get('error'):
+                      fails.append(f\"- [{req_name}] {a.get('assertion','?')}: {a.get('error',{}).get('message','?')}\")
+          print('\n'.join(fails[:20]) if fails else 'Không có chi tiết')
+          " 2>/dev/null || echo "Không thể parse chi tiết")
 
             echo "POSTMAN_PASS=$PASS" >> $GITHUB_ENV
             echo "POSTMAN_FAIL=$FAIL" >> $GITHUB_ENV
-            echo "DEPLOY_VERSION=$VERSION" >> $GITHUB_ENV
-            echo "Results: $PASS passed, $FAIL failed"
+            echo "Newman: $PASS passed, $FAIL failed"
+            echo "Fail details: $FAIL_DETAILS"
+
+            # Lưu fail details vào file để dùng ở step sau
+            echo "$FAIL_DETAILS" > postman-fail-details.txt
+          else
+            echo "POSTMAN_PASS=0" >> $GITHUB_ENV
+            echo "POSTMAN_FAIL=1" >> $GITHUB_ENV
+            echo "⚠️ Không tìm thấy postman-results.json" > postman-fail-details.txt
           fi
-        continue-on-error: true
 
       - name: Upload Postman Report
         uses: actions/upload-artifact@v4
         with:
           name: postman-report
-          path: postman-report.html
+          path: |
+            postman-report.html
+            postman-results.json
         if: always()
 
+      # ── Tự động tạo Bug trên Jira khi có test fail ──
+      - name: Create Jira Bug on Postman Failure
+        if: always() && env.POSTMAN_FAIL != '0' && env.POSTMAN_FAIL != ''
+        run: |
+          echo "❌ Postman có ${{ env.POSTMAN_FAIL }} assertion(s) thất bại → Tạo Jira Bug..."
+
+          FAIL_DETAILS=$(cat postman-fail-details.txt 2>/dev/null || echo "Không có chi tiết")
+          # Escape ký tự đặc biệt cho JSON
+          FAIL_DETAILS_ESC=$(echo "$FAIL_DETAILS" | python3 -c "
+          import sys,json
+          print(json.dumps(sys.stdin.read())[1:-1])
+          ")
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue" \
+            -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"fields\": {
+                \"project\": { \"key\": \"KAN\" },
+                \"summary\": \"[AUTO-BUG] Postman API Test Failed - ${{ github.ref_name }} - Run #${{ github.run_number }}\",
+                \"issuetype\": { \"name\": \"Bug\" },
+                \"priority\": { \"name\": \"High\" },
+                \"description\": {
+                  \"type\": \"doc\",
+                  \"version\": 1,
+                  \"content\": [
+                    {
+                      \"type\": \"paragraph\",
+                      \"content\": [{ \"type\": \"text\", \"text\": \"🤖 Bug được tạo tự động bởi CI/CD Pipeline\" }]
+                    },
+                    {
+                      \"type\": \"paragraph\",
+                      \"content\": [{ \"type\": \"text\", \"text\": \"📌 Branch: ${{ github.ref_name }}\\n📌 Commit: ${{ github.sha }}\\n📌 Author: ${{ github.actor }}\\n📌 Deploy Version: ${{ env.DEPLOY_VERSION }}\\n\\n❌ Tests Failed: ${{ env.POSTMAN_FAIL }}\\n✅ Tests Passed: ${{ env.POSTMAN_PASS }}\" }]
+                    },
+                    {
+                      \"type\": \"paragraph\",
+                      \"content\": [{ \"type\": \"text\", \"text\": \"📋 Chi tiết lỗi:\\n$FAIL_DETAILS_ESC\" }]
+                    },
+                    {
+                      \"type\": \"paragraph\",
+                      \"content\": [{ \"type\": \"text\", \"text\": \"🔗 Xem full report: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\" }]
+                    }
+                  ]
+                }
+              }
+            }")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -1)
+          BUG_KEY=$(echo "$BODY" | grep -o '"key":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+          if [ "$HTTP_CODE" = "201" ] && [ -n "$BUG_KEY" ]; then
+            echo "✅ Jira Bug đã được tạo: $BUG_KEY"
+            echo "🔗 Link: ${{ secrets.JIRA_BASE_URL }}/browse/$BUG_KEY"
+            echo "POSTMAN_BUG_KEY=$BUG_KEY" >> $GITHUB_ENV
+          else
+            echo "⚠️ Tạo Bug thất bại. HTTP: $HTTP_CODE"
+            echo "Response: $BODY"
+          fi
+        continue-on-error: true
+
       - name: Postman Summary
+        if: always()
         run: |
           echo "## 📮 Postman API Test Summary" >> $GITHUB_STEP_SUMMARY
           echo "| | |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
           echo "| Deploy Version | ${{ env.DEPLOY_VERSION }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Tests Passed | ${{ env.POSTMAN_PASS }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Tests Failed | ${{ env.POSTMAN_FAIL }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests Passed   | ✅ ${{ env.POSTMAN_PASS }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests Failed   | ❌ ${{ env.POSTMAN_FAIL }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Jira Bug       | ${{ env.POSTMAN_BUG_KEY || 'None' }} |" >> $GITHUB_STEP_SUMMARY
 
   # ─────────────────────────────────────────
   # 9. SONARCLOUD SCAN
@@ -664,12 +751,26 @@ jobs:
           steps.pipeline_status.outputs.fail_count == '0'
         run: |
           echo "✅ Pipeline passed → Assign member cho sprint task"
+          BRANCH="${{ steps.extract_jira.outputs.branch }}"
           SPRINT="${{ steps.extract_jira.outputs.sprint }}"
 
           if [ -n "$SPRINT" ]; then
-            # Assign cho member dựa theo sprint (dùng JIRA_MEMBER_EMAIL secret)
+            # Map số sprint → JIRA_MEMBER_EMAIL_1..6
+            SPRINT_NUM=$(echo "$SPRINT" | grep -oP '\d+' | head -1 || echo "1")
+            case "$SPRINT_NUM" in
+              1) MEMBER_EMAIL="${{ secrets.JIRA_MEMBER_EMAIL_1 }}" ;;
+              2) MEMBER_EMAIL="${{ secrets.JIRA_MEMBER_EMAIL_2 }}" ;;
+              3) MEMBER_EMAIL="${{ secrets.JIRA_MEMBER_EMAIL_3 }}" ;;
+              4) MEMBER_EMAIL="${{ secrets.JIRA_MEMBER_EMAIL_4 }}" ;;
+              5) MEMBER_EMAIL="${{ secrets.JIRA_MEMBER_EMAIL_5 }}" ;;
+              6) MEMBER_EMAIL="${{ secrets.JIRA_MEMBER_EMAIL_6 }}" ;;
+              *) MEMBER_EMAIL="${{ secrets.JIRA_MEMBER_EMAIL_1 }}" ;;
+            esac
+
+            echo "📌 Sprint $SPRINT_NUM → Assign to: $MEMBER_EMAIL"
+
             MEMBER_ID=$(curl -s \
-              "${{ secrets.JIRA_BASE_URL }}/rest/api/3/user/search?query=${{ secrets.JIRA_MEMBER_EMAIL }}" \
+              "${{ secrets.JIRA_BASE_URL }}/rest/api/3/user/search?query=$MEMBER_EMAIL" \
               -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
               -H "Content-Type: application/json" \
               | grep -o '"accountId":"[^"]*"' | head -1 | cut -d'"' -f4)
@@ -680,7 +781,9 @@ jobs:
                 -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
                 -H "Content-Type: application/json" \
                 -d "{\"accountId\":\"$MEMBER_ID\"}"
-              echo "✅ Assigned to Member ($SPRINT): ${{ secrets.JIRA_MEMBER_EMAIL }}"
+              echo "✅ Assigned to Member ($SPRINT): $MEMBER_EMAIL"
+            else
+              echo "⚠️ Không tìm thấy account Jira cho $MEMBER_EMAIL"
             fi
           else
             echo "ℹ️ Không phải sprint branch, bỏ qua assign member"
