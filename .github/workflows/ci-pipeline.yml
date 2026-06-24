@@ -130,16 +130,15 @@ jobs:
         run: |
           npm install
           echo "PORT=5000" > .env
-          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+          echo "MONGODB_URI=${{ secrets.MONGO_URI }}" >> .env
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
           echo "NODE_ENV=test" >> .env
           export PORT=5000
-          export MONGO_URI="${{ secrets.MONGO_URI }}"
+          export MONGODB_URI="${{ secrets.MONGO_URI }}"
           export JWT_SECRET="${{ secrets.JWT_SECRET }}"
           export NODE_ENV=test
           npm start &
           sleep 10
-        continue-on-error: true
 
       - name: Verify API Health Endpoint
         run: |
@@ -196,16 +195,15 @@ jobs:
         run: |
           npm install
           echo "PORT=5000" > .env
-          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+          echo "MONGODB_URI=${{ secrets.MONGO_URI }}" >> .env
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
           echo "NODE_ENV=test" >> .env
           export PORT=5000
-          export MONGO_URI="${{ secrets.MONGO_URI }}"
+          export MONGODB_URI="${{ secrets.MONGO_URI }}"
           export JWT_SECRET="${{ secrets.JWT_SECRET }}"
           export NODE_ENV=test
           npm start &
           sleep 10
-        continue-on-error: true
 
       - name: Start Frontend Dev Server
         working-directory: ./gearvault/frontend
@@ -271,11 +269,11 @@ jobs:
         run: |
           npm install
           echo "PORT=5001" > .env.dev
-          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env.dev
+          echo "MONGODB_URI=${{ secrets.MONGO_URI }}" >> .env.dev
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env.dev
           echo "NODE_ENV=development" >> .env.dev
           export PORT=5001
-          export MONGO_URI="${{ secrets.MONGO_URI }}"
+          export MONGODB_URI="${{ secrets.MONGO_URI }}"
           export JWT_SECRET="${{ secrets.JWT_SECRET }}"
           export NODE_ENV=development
           echo "✅ Backend deployed to Dev → http://localhost:5001"
@@ -400,16 +398,15 @@ jobs:
         run: |
           npm install
           echo "PORT=5000" > .env
-          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+          echo "MONGODB_URI=${{ secrets.MONGO_URI }}" >> .env
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
           echo "NODE_ENV=development" >> .env
           export PORT=5000
-          export MONGO_URI="${{ secrets.MONGO_URI }}"
+          export MONGODB_URI="${{ secrets.MONGO_URI }}"
           export JWT_SECRET="${{ secrets.JWT_SECRET }}"
           export NODE_ENV=development
           npm start &
           sleep 10
-        continue-on-error: true
 
       - name: Run Postman Collection (Newman)
         run: |
