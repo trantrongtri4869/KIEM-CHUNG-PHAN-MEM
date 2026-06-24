@@ -32,16 +32,18 @@ router.get('/', async (req, res) => {
       popular: { sold: -1 },
     }
 
-    const skip = (Number(page) - 1) * Number(limit)
+    const currentPage = Math.max(1, Number(page));
+    const currentLimit = Math.max(1, Number(limit));
+    const skip = (currentPage - 1) * currentLimit;
     const [products, total] = await Promise.all([
-      Product.find(filter).sort(sortMap[sort] || sortMap.newest).skip(skip).limit(Number(limit)),
+      Product.find(filter).sort(sortMap[sort] || sortMap.newest).skip(skip).limit(currentLimit),
       Product.countDocuments(filter),
     ])
 
     res.json({
       success: true,
       data: products,
-      pagination: { page: Number(page), limit: Number(limit), total, pages: Math.ceil(total / Number(limit)) },
+      pagination: { page: currentPage, limit: currentLimit, total, pages: Math.ceil(total / currentLimit) },
     })
   } catch (error) {
     res.status(500).json({ success: false, message: error.message })
