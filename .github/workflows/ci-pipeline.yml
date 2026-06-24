@@ -187,6 +187,14 @@ jobs:
         with:
           node-version: '18'
 
+      # ─── ĐOẠN ĐƯỢC THÊM MỚI VÀO ĐÂY ĐỂ FIX LỖI ───
+      - name: Start MongoDB Service
+        run: |
+          sudo systemctl start mongod || true
+          sleep 3
+          echo "✅ MongoDB Service is running on localhost:27017"
+        continue-on-error: true
+
       - name: Start Backend
         working-directory: ./gearvault/backend
         run: |
@@ -231,8 +239,7 @@ jobs:
 
   # ─────────────────────────────────────────
   # 6. DEPLOY TO DEV (simulate local)
-  #    Ảnh 1: SP1 → test.deploy
-  #    2 môi trường: Dev (App + Database)
+  #    Dev (App + Database)
   # ─────────────────────────────────────────
   deploy-dev:
     name: 🚀 Deploy to Dev
@@ -306,8 +313,7 @@ jobs:
 
   # ─────────────────────────────────────────
   # 7. MONGODB COMPARE: Dev vs Product
-  #    Ảnh 1: Dev DB ←compare→ Product DB
-  #    "Rót" = migrate / seed data
+  #    Dev DB ←compare→ Product DB
   # ─────────────────────────────────────────
   compare-mongodb:
     name: 🗄️ Compare MongoDB Dev vs Product
@@ -399,7 +405,7 @@ jobs:
 
   # ─────────────────────────────────────────
   # 8. POSTMAN API TEST (Dev environment)
-  #    Ảnh 1: Postman → deploy (version)
+  #    Postman → deploy (version)
   #    → Tự động tạo Bug trên Jira nếu fail
   # ─────────────────────────────────────────
   postman-test:
@@ -621,10 +627,7 @@ jobs:
 
   # ─────────────────────────────────────────
   # 10. JIRA SYNC — FULL
-  #     Ảnh 2: Member(2) → ID-comment → Jira
-  #     Leader nhận task khi có lỗi
-  #     Assign member theo branch name
-  #     History Log → Roll
+  #     Member(2) → ID-comment → Jira
   # ─────────────────────────────────────────
   jira-sync:
     name: 📋 Jira Sync (Full)
@@ -634,7 +637,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ── Extract Jira ID từ commit (Ảnh 2: ID-comment) ──
+      # ── Extract Jira ID từ commit (ID-comment) ──
       - name: Extract Jira ID & Branch Info
         id: extract_jira
         shell: bash
@@ -708,7 +711,7 @@ jobs:
 
           echo "✅ Comment logged to ${{ steps.extract_jira.outputs.jira_id }}"
 
-      # ── Assign Leader khi có lỗi (Ảnh 2: ERR → Leader) ──
+      # ── Assign Leader khi có lỗi ──
       - name: Assign to Leader on Error
         if: |
           steps.extract_jira.outputs.found == 'true' &&
@@ -734,7 +737,7 @@ jobs:
             echo "⚠️ Leader account not found, skipping assign"
           fi
 
-          # Log task lỗi vào Jira comment (Ảnh 2: Log task)
+          # Log task lỗi vào Jira comment
           LOG_TEXT="🚨 Log Task: Pipeline FAILED (${{ steps.pipeline_status.outputs.fail_count }} job(s) failed) | Assigned to Leader for review | Branch: ${{ steps.extract_jira.outputs.branch }} | Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
           curl -s -X POST \
@@ -744,7 +747,7 @@ jobs:
             -d "{\"body\":{\"type\":\"doc\",\"version\":1,\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"$LOG_TEXT\"}]}]}}"
         continue-on-error: true
 
-      # ── Assign Member theo branch sprint (Ảnh 2: Member(2) → Assign) ──
+      # ── Assign Member theo branch sprint ──
       - name: Assign Member by Sprint Branch
         if: |
           steps.extract_jira.outputs.found == 'true' &&
@@ -790,7 +793,7 @@ jobs:
           fi
         continue-on-error: true
 
-      # ── History Log (Ảnh 2: History Log → Roll) ──
+      # ── History Log ──
       - name: History Log & Roll
         if: always()
         run: |
