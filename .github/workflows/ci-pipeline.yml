@@ -130,9 +130,13 @@ jobs:
         run: |
           npm install
           echo "PORT=5000" > .env
-          echo "MONGO_URI=mongodb://localhost:27017/gearvault_test" >> .env
-          echo "JWT_SECRET=ci_test_secret_key" >> .env
+          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
           echo "NODE_ENV=test" >> .env
+          export PORT=5000
+          export MONGO_URI="${{ secrets.MONGO_URI }}"
+          export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+          export NODE_ENV=test
           npm start &
           sleep 10
         continue-on-error: true
@@ -187,24 +191,20 @@ jobs:
         with:
           node-version: '18'
 
-      # ─── ĐOẠN ĐƯỢC THÊM MỚI VÀO ĐÂY ĐỂ FIX LỖI ───
-      - name: Start MongoDB Service
-        run: |
-          sudo systemctl start mongod || true
-          sleep 3
-          echo "✅ MongoDB Service is running on localhost:27017"
-        continue-on-error: true
-
       - name: Start Backend
         working-directory: ./gearvault/backend
         run: |
           npm install
           echo "PORT=5000" > .env
-          echo "MONGO_URI=mongodb://localhost:27017/gearvault_test" >> .env
-          echo "JWT_SECRET=ci_test_secret_key" >> .env
+          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
           echo "NODE_ENV=test" >> .env
+          export PORT=5000
+          export MONGO_URI="${{ secrets.MONGO_URI }}"
+          export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+          export NODE_ENV=test
           npm start &
-          sleep 8
+          sleep 10
         continue-on-error: true
 
       - name: Start Frontend Dev Server
@@ -266,24 +266,20 @@ jobs:
           path: gearvault/backend/
 
       # Simulate Dev environment (App + Database)
-      - name: Start MongoDB Dev
-        run: |
-          sudo systemctl start mongod || true
-          sleep 3
-          echo "✅ MongoDB Dev started on port 27017"
-        continue-on-error: true
-
       - name: Deploy Backend to Dev
         working-directory: ./gearvault/backend
         run: |
           npm install
           echo "PORT=5001" > .env.dev
-          echo "MONGO_URI=mongodb://localhost:27017/gearvault_dev" >> .env.dev
-          echo "JWT_SECRET=dev_secret_key" >> .env.dev
+          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env.dev
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env.dev
           echo "NODE_ENV=development" >> .env.dev
+          export PORT=5001
+          export MONGO_URI="${{ secrets.MONGO_URI }}"
+          export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+          export NODE_ENV=development
           echo "✅ Backend deployed to Dev → http://localhost:5001"
-          echo "📦 App: gearvault_dev"
-          echo "🗄️ Database: mongodb://localhost:27017/gearvault_dev"
+          echo "🗄️ Database: MongoDB Atlas"
 
       - name: Deploy Frontend to Dev
         working-directory: ./gearvault/frontend
@@ -323,50 +319,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install MongoDB Tools
+      - name: Install mongosh
         run: |
           wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
           echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
           sudo apt-get update -qq
-          sudo apt-get install -y mongodb-org-tools 2>/dev/null || true
-
-      - name: Start MongoDB & Seed Dev Data
-        run: |
-          sudo systemctl start mongod || true
-          sleep 3
-          # Seed Dev DB với dữ liệu mẫu
-          mongosh mongodb://localhost:27017/gearvault_dev --eval "
-            db.products.insertMany([
-              {name: 'Gaming Mouse', price: 59, stock: 100},
-              {name: 'Mechanical Keyboard', price: 129, stock: 50},
-              {name: 'Gaming Headset', price: 89, stock: 75}
-            ]);
-            db.users.insertOne({email: 'test@gearvault.com', role: 'user'});
-          " 2>/dev/null || echo "Seed skipped (no mongosh)"
-
-          # Simulate Product DB (subset của Dev)
-          mongosh mongodb://localhost:27017/gearvault_product --eval "
-            db.products.insertMany([
-              {name: 'Gaming Mouse', price: 59, stock: 100},
-              {name: 'Mechanical Keyboard', price: 129, stock: 50}
-            ]);
-            db.users.insertOne({email: 'admin@gearvault.com', role: 'admin'});
-          " 2>/dev/null || echo "Seed skipped (no mongosh)"
-        continue-on-error: true
+          sudo apt-get install -y mongodb-mongosh 2>/dev/null || true
 
       - name: Compare Collections Dev vs Product
         run: |
-          echo "=== 🗄️ MongoDB Comparison: Dev vs Product ===" 
+          echo "=== 🗄️ MongoDB Comparison: Dev vs Product ==="
+          MONGO="${{ secrets.MONGO_URI }}"
 
-          DEV_PRODUCTS=$(mongosh --quiet mongodb://localhost:27017/gearvault_dev \
-            --eval "db.products.countDocuments()" 2>/dev/null || echo "N/A")
-          PROD_PRODUCTS=$(mongosh --quiet mongodb://localhost:27017/gearvault_product \
-            --eval "db.products.countDocuments()" 2>/dev/null || echo "N/A")
+          DEV_PRODUCTS=$(mongosh --quiet "$MONGO" \
+            --eval "db.getSiblingDB('gearvault_dev').products.countDocuments()" 2>/dev/null || echo "N/A")
+          PROD_PRODUCTS=$(mongosh --quiet "$MONGO" \
+            --eval "db.getSiblingDB('gearvault').products.countDocuments()" 2>/dev/null || echo "N/A")
 
-          DEV_USERS=$(mongosh --quiet mongodb://localhost:27017/gearvault_dev \
-            --eval "db.users.countDocuments()" 2>/dev/null || echo "N/A")
-          PROD_USERS=$(mongosh --quiet mongodb://localhost:27017/gearvault_product \
-            --eval "db.users.countDocuments()" 2>/dev/null || echo "N/A")
+          DEV_USERS=$(mongosh --quiet "$MONGO" \
+            --eval "db.getSiblingDB('gearvault_dev').users.countDocuments()" 2>/dev/null || echo "N/A")
+          PROD_USERS=$(mongosh --quiet "$MONGO" \
+            --eval "db.getSiblingDB('gearvault').users.countDocuments()" 2>/dev/null || echo "N/A")
 
           echo "Collection     | Dev  | Product | Status"
           echo "---------------|------|---------|-------"
@@ -381,11 +354,10 @@ jobs:
       - name: Rot Data (Migrate Dev → Product if needed)
         run: |
           echo "=== 🔄 'Rót' Data: Dev → Product ==="
-          # Kiểm tra nếu Product thiếu data so với Dev thì migrate
           if [ "$DEV_PRODUCTS" != "$PROD_PRODUCTS" ] && [ "$DEV_PRODUCTS" != "N/A" ]; then
             echo "⚠️ Product DB thiếu dữ liệu so với Dev"
             echo "🔄 Simulating data migration Dev → Product..."
-            mongosh mongodb://localhost:27017/gearvault_product --eval "
+            mongosh --quiet "${{ secrets.MONGO_URI }}" --eval "
               print('Migration: syncing products from Dev...');
             " 2>/dev/null || true
             echo "✅ Migration simulated"
@@ -423,21 +395,18 @@ jobs:
       - name: Install Newman (Postman CLI)
         run: npm install -g newman newman-reporter-htmlextra newman-reporter-json
 
-      - name: Start MongoDB for Postman
-        run: |
-          sudo systemctl start mongod || true
-          sleep 3
-          echo "✅ MongoDB started"
-        continue-on-error: true
-
       - name: Start Backend for Postman
         working-directory: ./gearvault/backend
         run: |
           npm install
           echo "PORT=5000" > .env
-          echo "MONGO_URI=mongodb://localhost:27017/gearvault_dev" >> .env
-          echo "JWT_SECRET=ci_test_secret_key" >> .env
+          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
           echo "NODE_ENV=development" >> .env
+          export PORT=5000
+          export MONGO_URI="${{ secrets.MONGO_URI }}"
+          export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+          export NODE_ENV=development
           npm start &
           sleep 10
         continue-on-error: true
