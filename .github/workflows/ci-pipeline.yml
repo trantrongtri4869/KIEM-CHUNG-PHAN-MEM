@@ -408,6 +408,13 @@ jobs:
           npm start &
           sleep 10
 
+      - name: Seed Database
+        working-directory: ./gearvault/backend
+        run: |
+          export MONGODB_URI="${{ secrets.MONGO_URI }}"
+          node src/seeds/seed.js
+        continue-on-error: true
+
       - name: Run Postman Collection (Newman)
         run: |
           VERSION="1.0.${{ github.run_number }}"
