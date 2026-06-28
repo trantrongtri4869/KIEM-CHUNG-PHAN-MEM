@@ -24,9 +24,9 @@
   },
   "devDependencies": {
     "dotenv-cli": "^11.0.0",
-    "nodemon": "^3.0.3",
     "jest": "^29.7.0",
-    "supertest": "^6.3.4",
-    "mongodb-memory-server": "^9.1.6"
+    "mongodb-memory-server": "^9.5.0",
+    "nodemon": "^3.0.3",
+    "supertest": "^6.3.4"
   }
 }
