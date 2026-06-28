@@ -15,15 +15,40 @@ router.get('/', protect, adminOnly, async (req, res) => {
   }
 })
 
+const bcrypt = require('bcryptjs');
+
 router.put('/:id', protect, adminOnly, async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true })
-    if (!user) return res.status(404).json({ success: false, message: 'User not found' })
-    res.json({ success: true, data: user })
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Cập nhật các trường được gửi lên
+    Object.assign(user, req.body);
+
+    // Nếu có cập nhật password thì hash trước khi lưu
+    if (req.body.password) {
+      user.password = await bcrypt.hash(req.body.password, 12);
+    }
+
+    await user.save();
+
+    res.json({
+      success: true,
+      data: user
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message })
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
-})
+});
 
 router.delete('/:id', protect, adminOnly, async (req, res) => {
   try {
