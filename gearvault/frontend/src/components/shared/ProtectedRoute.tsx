@@ -5,7 +5,8 @@ interface ProtectedRouteProps {
   children: React.ReactNode
   adminOnly?: boolean
 }
-export function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
+
+export const ProtectedRoute = ({ children, adminOnly }: ProtectedRouteProps) => {
   const { isAuthenticated, user } = useAuthStore()
   const location = useLocation()
 

@@ -95,7 +95,7 @@ router.put('/profile', protect, async (req, res) => {
       req.user._id,
       { name, email },
       { new: true, runValidators: true }
-    )
+    ).select('-password')
     res.json({ success: true, data: user })
   } catch (error) {
     res.status(500).json({ success: false, message: error.message })
