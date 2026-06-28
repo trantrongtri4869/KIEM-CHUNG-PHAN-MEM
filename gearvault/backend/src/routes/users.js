@@ -1,7 +1,7 @@
 const express = require('express')
 const { User } = require('../models')
 const { protect, adminOnly } = require('../middleware/auth')
-
+const mongoose = require('mongoose');
 const router = express.Router()
 
 router.get('/', protect, adminOnly, async (req, res) => {
@@ -52,11 +52,31 @@ router.put('/:id', protect, adminOnly, async (req, res) => {
 
 router.delete('/:id', protect, adminOnly, async (req, res) => {
   try {
-    await User.findByIdAndDelete(req.params.id)
-    res.json({ success: true, message: 'User deleted' })
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message })
-  }
-})
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
 
+    const user = await User.findByIdAndDelete(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'User deleted'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
 module.exports = router
