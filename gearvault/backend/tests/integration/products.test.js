@@ -289,3 +289,50 @@ describe('DELETE /api/products/:id', () => {
     expect(res.statusCode).toBe(404)
   })
 })
+
+// ==================== PCTC_1.5 — page=0 → skip âm gây lỗi ====================
+// BUG: không chuẩn hoá page < 1 → .skip() nhận giá trị âm
+describe('GET /api/products — PCTC_1.5', () => {
+  it('PCTC_1.5 (BUG) — page=0 → phải tự về trang 1, không lỗi server', async () => {
+    await Product.create([
+      productPayload({ slug: 'p1', name: 'P1' }),
+      productPayload({ slug: 'p2', name: 'P2' }),
+    ])
+
+    const res = await request(app).get('/api/products?page=0')
+
+    // BUG: skip = (0-1)*12 = -12 → MongoDB lỗi hoặc kết quả sai
+    // Đúng: phải trả 200 và tự fallback về trang 1
+    expect(res.statusCode).toBe(200)
+    expect(res.body.data.length).toBeGreaterThan(0)
+  })
+
+  it('PCTC_1.5 — page âm cũng phải không gây lỗi server', async () => {
+    const res = await request(app).get('/api/products?page=-1')
+    expect(res.statusCode).not.toBe(500)
+  })
+})
+
+// ==================== PCTC_10.2 — category tên có ký tự regex đặc biệt ====================
+// BUG: cat.name đưa thẳng vào $regex không escape → lỗi hoặc sai kết quả
+describe('GET /api/categories — PCTC_10.2', () => {
+  it('PCTC_10.2 (BUG) — tên category có ký tự regex đặc biệt → không lỗi server', async () => {
+    const { Category: CategoryModel } = require('../../src/models')
+
+    // Tạo category với tên chứa ký tự đặc biệt regex
+    await CategoryModel.create({ name: 'Audio/Video (HD)', slug: 'audio-video-hd', description: 'AV gear' })
+    await Product.create(productPayload({ slug: 'av-prod', category: 'Audio/Video (HD)' }))
+
+    const res = await request(app).get('/api/categories')
+
+    // BUG: $regex với ký tự đặc biệt không escape → Invalid regular expression
+    // Đúng: không lỗi server, trả productCount đúng
+    expect(res.statusCode).toBe(200)
+    expect(res.statusCode).not.toBe(500)
+
+    const avCategory = res.body.data.find(c => c.name === 'Audio/Video (HD)')
+    if (avCategory) {
+      expect(avCategory.productCount).toBeGreaterThanOrEqual(1)
+    }
+  })
+})

@@ -176,3 +176,70 @@ describe('POST /api/auth/forgot-password', () => {
     expect(res.body.message).toContain('anyone@example.com')
   })
 })
+
+// ==================== AUTC_4.2 — updateProfile: response không lộ password hash ====================
+// BUG: findByIdAndUpdate thiếu .select('-password') → hash bị trả về client
+describe('PUT /api/auth/profile — AUTC_4.2', () => {
+  it('AUTC_4.2 (BUG) — response KHÔNG được chứa field password hash', async () => {
+    const user = await User.create(userPayload())
+    const token = makeToken(user._id)
+
+    const res = await request(app)
+      .put('/api/auth/profile')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'New Name', email: 'test@example.com' })
+
+    expect(res.statusCode).toBe(200)
+    // BUG: thiếu .select('-password') → password hash bị lộ trong response
+    expect(res.body.data.password).toBeUndefined()
+  })
+})
+
+// ==================== AUTC_7.3 — updateUser: gửi password trong body → phải hash ====================
+// BUG: findByIdAndUpdate bỏ qua pre('save') hook → mật khẩu lưu plaintext
+describe('PUT /api/users/:id — AUTC_7.3', () => {
+  it('AUTC_7.3 (BUG) — gửi password trong body → phải được hash trước khi lưu', async () => {
+    const target = await User.create(userPayload())
+
+    // Dùng admin token - tạo admin trực tiếp từ DB
+    const admin = await User.create({
+      name: 'Admin',
+      email: 'admin2@example.com',
+      password: 'admin123',
+      role: 'admin',
+    })
+    const adminTok = makeToken(admin._id)
+
+    await request(app)
+      .put(`/api/users/${target._id}`)
+      .set('Authorization', `Bearer ${adminTok}`)
+      .send({ password: 'newplaintext' })
+
+    const updated = await User.findById(target._id).select('+password')
+    // Nếu bị BUG: password được lưu plaintext (không bắt đầu bằng $2b$)
+    // Nếu đúng: password phải được hash (bắt đầu bằng $2b$)
+    expect(updated.password).toMatch(/^\$2[aby]\$/)
+  })
+})
+
+// ==================== AUTC_8.2 — deleteUser: id không tồn tại → phải 404 ====================
+// BUG: không kiểm tra kết quả findByIdAndDelete → luôn trả 200
+describe('DELETE /api/users/:id — AUTC_8.2', () => {
+  it('AUTC_8.2 (BUG) — id không tồn tại → phải trả 404, không phải 200', async () => {
+    const admin = await User.create({
+      name: 'Admin',
+      email: 'admin3@example.com',
+      password: 'admin123',
+      role: 'admin',
+    })
+    const adminTok = makeToken(admin._id)
+    const fakeId = new (require('mongoose')).Types.ObjectId()
+
+    const res = await request(app)
+      .delete(`/api/users/${fakeId}`)
+      .set('Authorization', `Bearer ${adminTok}`)
+
+    // BUG: backend trả 200 dù id không tồn tại
+    expect(res.statusCode).toBe(404)
+  })
+})

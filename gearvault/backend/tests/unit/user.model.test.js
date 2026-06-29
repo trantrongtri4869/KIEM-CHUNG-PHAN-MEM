@@ -197,3 +197,73 @@ describe('sanitizeUserOutput()', () => {
     expect(safe.role).toBe('user')
   })
 })
+
+// ── AUTC_8_2 — updateProfile: response không lộ password hash ─────────────
+// BUG: findByIdAndUpdate thiếu .select('-password') → hash bị trả về client
+
+function sanitizeUpdateProfileResponse(userDoc) {
+  if (!userDoc) return null
+  const { password, ...safe } = userDoc
+  return safe
+}
+
+function hasPasswordInResponse(responseData) {
+  return responseData && 'password' in responseData
+}
+
+describe('AUTC_8_2 — updateProfile: response không lộ password hash', () => {
+  test('response đúng: KHÔNG chứa field password', () => {
+    const userFromDB = { _id: '123', name: 'Trí', email: 'tri@gmail.com', role: 'user', password: '$2b$12$hash' }
+    const safe = sanitizeUpdateProfileResponse(userFromDB)
+    expect(hasPasswordInResponse(safe)).toBe(false)
+  })
+
+  test('BUG scenario: không sanitize → password bị lộ', () => {
+    const userFromDB = { _id: '123', name: 'Trí', email: 'tri@gmail.com', password: '$2b$12$hash' }
+    expect(hasPasswordInResponse(userFromDB)).toBe(true)
+  })
+
+  test('các field khác vẫn được giữ sau khi sanitize', () => {
+    const userFromDB = { _id: '123', name: 'Trí', email: 'tri@gmail.com', role: 'user', password: '$2b$12$hash' }
+    const safe = sanitizeUpdateProfileResponse(userFromDB)
+    expect(safe._id).toBe('123')
+    expect(safe.name).toBe('Trí')
+    expect(safe.role).toBe('user')
+  })
+
+  test('trả null khi userDoc = null', () => {
+    expect(sanitizeUpdateProfileResponse(null)).toBeNull()
+  })
+})
+
+// ── AUTC_11_2 — deleteUser: id không tồn tại phải trả 404, không phải 200 ──
+// BUG: handler không kiểm tra kết quả findByIdAndDelete → luôn trả 200
+
+function handleDeleteUserResult(deletedDoc) {
+  if (!deletedDoc) {
+    return { status: 404, body: { success: false, message: 'User not found' } }
+  }
+  return { status: 200, body: { success: true, message: 'User deleted' } }
+}
+
+describe('AUTC_11_2 — deleteUser: id không tồn tại phải trả 404', () => {
+  test('findByIdAndDelete=null → trả 404', () => {
+    const result = handleDeleteUserResult(null)
+    expect(result.status).toBe(404)
+    expect(result.body.success).toBe(false)
+    expect(result.body.message).toBe('User not found')
+  })
+
+  test('findByIdAndDelete trả doc → trả 200', () => {
+    const result = handleDeleteUserResult({ _id: '123', name: 'Trí' })
+    expect(result.status).toBe(200)
+    expect(result.body.success).toBe(true)
+  })
+
+  test('BUG scenario: không kiểm tra kết quả → id không tồn tại vẫn trả 200', () => {
+    // Simulate hành vi sai hiện tại của backend
+    const buggyHandler = (_doc) => ({ status: 200, body: { success: true, message: 'User deleted' } })
+    const result = buggyHandler(null)
+    expect(result.status).toBe(200) // SAI — phải là 404
+  })
+})

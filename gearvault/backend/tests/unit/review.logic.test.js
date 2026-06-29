@@ -155,3 +155,57 @@ describe('isValidRating()', () => {
     expect(isValidRating(null)).toBe(false)
   })
 })
+
+// ── RATC_3_5 — deleteReview: phải tính lại rating sau khi xoá ──────────────
+// BUG: route DELETE không gọi lại logic tính avgRating như POST có làm
+
+function calcRatingAfterDelete(remainingReviews) {
+  if (!remainingReviews || remainingReviews.length === 0) {
+    return { rating: 0, numReviews: 0 }
+  }
+  const sum = remainingReviews.reduce((acc, r) => acc + r.rating, 0)
+  const avg = parseFloat((sum / remainingReviews.length).toFixed(1))
+  return { rating: avg, numReviews: remainingReviews.length }
+}
+
+describe('RATC_3_5 — deleteReview: tính lại rating sau khi xoá', () => {
+  test('xoá review cuối cùng → rating=0, numReviews=0', () => {
+    const result = calcRatingAfterDelete([])
+    expect(result.rating).toBe(0)
+    expect(result.numReviews).toBe(0)
+  })
+
+  test('xoá 1 trong 3 review → tính lại đúng với 2 review còn lại', () => {
+    const remaining = [{ rating: 4 }, { rating: 2 }]
+    const result = calcRatingAfterDelete(remaining)
+    expect(result.rating).toBe(3.0)
+    expect(result.numReviews).toBe(2)
+  })
+
+  test('còn 1 review sau xoá → rating = rating của review đó', () => {
+    const result = calcRatingAfterDelete([{ rating: 5 }])
+    expect(result.rating).toBe(5.0)
+    expect(result.numReviews).toBe(1)
+  })
+
+  test('calcRatingAfterDelete(null) → rating=0, numReviews=0', () => {
+    const result = calcRatingAfterDelete(null)
+    expect(result.rating).toBe(0)
+    expect(result.numReviews).toBe(0)
+  })
+
+  test('BUG scenario: không tính lại → rating cũ vẫn còn trên product (stale data)', () => {
+    // Trước xoá: product rating=4.5, numReviews=2
+    const productBefore = { rating: 4.5, numReviews: 2 }
+    // BUG: backend chỉ xoá review, không update product
+    const productAfterBug = { ...productBefore }
+    expect(productAfterBug.numReviews).toBe(2)  // SAI: phải là 1
+    expect(productAfterBug.rating).toBe(4.5)    // SAI: cần tính lại
+  })
+
+  test('rating làm tròn đúng sau khi xoá: (5+3+4)/3 = 4.0', () => {
+    const remaining = [{ rating: 5 }, { rating: 3 }, { rating: 4 }]
+    const result = calcRatingAfterDelete(remaining)
+    expect(result.rating).toBe(4.0)
+  })
+})

@@ -165,3 +165,64 @@ describe('getTopProducts()', () => {
     expect(getTopProducts([], 5)).toHaveLength(0)
   })
 })
+
+// ── RATC_5_2 — adminRevenue: phải trả 12 tháng GẦN NHẤT, không phải cũ nhất
+// BUG: pipeline sort ASC trước $limit → lấy 12 tháng cũ nhất thay vì gần nhất
+
+function getLast12Months(allMonthlyData) {
+  // Logic đúng: sort DESC → slice 12 → sort ASC lại để hiển thị
+  return [...allMonthlyData]
+    .sort((a, b) => a.year !== b.year ? b.year - a.year : b.month - a.month)
+    .slice(0, 12)
+    .sort((a, b) => a.year !== b.year ? a.year - b.year : a.month - b.month)
+}
+
+function getFirst12Months(allMonthlyData) {
+  // Simulate BUG: sort ASC rồi slice → lấy 12 tháng cũ nhất
+  return [...allMonthlyData]
+    .sort((a, b) => a.year !== b.year ? a.year - b.year : a.month - b.month)
+    .slice(0, 12)
+}
+
+// Tạo data 15 tháng: 2025-01 → 2026-03
+const allMonthlyData = []
+for (let m = 1; m <= 12; m++) allMonthlyData.push({ year: 2025, month: m, revenue: m * 100 })
+for (let m = 1; m <= 3; m++) allMonthlyData.push({ year: 2026, month: m, revenue: m * 200 })
+
+describe('RATC_5_2 — adminRevenue: phải trả 12 tháng GẦN NHẤT', () => {
+  test('logic đúng: có 15 tháng → trả 12 tháng gần nhất (2025-04 → 2026-03)', () => {
+    const result = getLast12Months(allMonthlyData)
+    expect(result).toHaveLength(12)
+    expect(result[0].year).toBe(2025)
+    expect(result[0].month).toBe(4)   // bắt đầu từ 2025-04
+    expect(result[result.length - 1].year).toBe(2026)
+    expect(result[result.length - 1].month).toBe(3) // kết thúc 2026-03
+  })
+
+  test('BUG scenario: sort ASC rồi slice → trả 12 tháng CŨ NHẤT (2025-01 → 2025-12)', () => {
+    const bugResult = getFirst12Months(allMonthlyData)
+    expect(bugResult[0].month).toBe(1)  // bắt đầu từ 2025-01 (SAI)
+    const has2026 = bugResult.some(d => d.year === 2026)
+    expect(has2026).toBe(false) // không có tháng 2026 (SAI)
+  })
+
+  test('kết quả luôn sort tăng dần (cũ → mới) để hiển thị chart đúng chiều', () => {
+    const result = getLast12Months(allMonthlyData)
+    for (let i = 0; i < result.length - 1; i++) {
+      const curr = result[i].year * 100 + result[i].month
+      const next = result[i + 1].year * 100 + result[i + 1].month
+      expect(curr).toBeLessThan(next)
+    }
+  })
+
+  test('khi có đúng 12 tháng data → bug và fix cho cùng kết quả', () => {
+    const exactly12 = allMonthlyData.slice(0, 12)
+    expect(getLast12Months(exactly12)).toHaveLength(12)
+    expect(getFirst12Months(exactly12)).toHaveLength(12)
+  })
+
+  test('khi có ít hơn 12 tháng → trả hết tất cả', () => {
+    const small = [{ year: 2026, month: 1, revenue: 100 }, { year: 2026, month: 2, revenue: 200 }]
+    expect(getLast12Months(small)).toHaveLength(2)
+  })
+})

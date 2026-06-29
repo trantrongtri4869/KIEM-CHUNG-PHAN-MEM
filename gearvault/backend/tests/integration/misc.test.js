@@ -462,3 +462,123 @@ describe('404 handler', () => {
     expect(res.body.success).toBe(false)
   })
 })
+
+// ================================================================
+// REVIEW BUG CASES — RATC_3.4 và RATC_5.1
+// ================================================================
+describe('Reviews Routes — Bug Cases', () => {
+  let testProduct2
+
+  beforeEach(async () => {
+    testProduct2 = await Product.create(productPayload({ slug: 'bug-test-product' }))
+  })
+
+  // ==================== RATC_3.4 — deleteReview: rating không tính lại ====================
+  // BUG: DELETE /reviews/:id không gọi lại logic tính avgRating như POST
+  it('RATC_3.4 (BUG) — xoá review cuối → Product.rating/numReviews phải được tính lại về 0', async () => {
+    // Tạo review → product có rating=5, numReviews=1
+    const review = await Review.create({
+      user: regularUser._id,
+      product: testProduct2._id,
+      rating: 5,
+      title: 'Great!',
+      comment: 'This product exceeded all my expectations.',
+    })
+    await Product.findByIdAndUpdate(testProduct2._id, { rating: 5, numReviews: 1 })
+
+    // Xoá review
+    await request(app)
+      .delete(`/api/reviews/${review._id}`)
+      .set('Authorization', `Bearer ${userToken}`)
+
+    // BUG: backend không tính lại → rating vẫn là 5, numReviews vẫn là 1
+    // Đúng: rating=0, numReviews=0
+    const updatedProduct = await Product.findById(testProduct2._id)
+    expect(updatedProduct.numReviews).toBe(0)
+    expect(Number(updatedProduct.rating)).toBe(0)
+  })
+
+  it('RATC_3.4 — xoá 1 trong 2 review → rating phải được tính lại với review còn lại', async () => {
+    const other = await User.create({ name: 'Other2', email: 'other2@test.com', password: '123456' })
+    const otherToken = makeToken(other._id)
+
+    // Tạo 2 review: rating 4 và 2 → avg = 3.0
+    await Review.create({
+      user: regularUser._id,
+      product: testProduct2._id,
+      rating: 4,
+      title: 'Good',
+      comment: 'A solid product that works as expected.',
+    })
+    const review2 = await Review.create({
+      user: other._id,
+      product: testProduct2._id,
+      rating: 2,
+      title: 'Not great',
+      comment: 'Had some issues with this product over time.',
+    })
+    await Product.findByIdAndUpdate(testProduct2._id, { rating: 3.0, numReviews: 2 })
+
+    // Xoá review rating=2 → phải còn lại rating=4, numReviews=1
+    await request(app)
+      .delete(`/api/reviews/${review2._id}`)
+      .set('Authorization', `Bearer ${otherToken}`)
+
+    const updatedProduct = await Product.findById(testProduct2._id)
+    // BUG: numReviews vẫn là 2, rating vẫn là 3.0
+    expect(updatedProduct.numReviews).toBe(1)
+    expect(Number(updatedProduct.rating)).toBe(4)
+  })
+})
+
+describe('Admin Routes — Bug Cases', () => {
+  // ==================== RATC_5.1 — adminRevenue: trả 12 tháng cũ nhất ====================
+  // BUG: sort ASC trước $limit → lấy 12 tháng cũ nhất thay vì gần nhất
+  it('RATC_5.1 (BUG) — có > 12 tháng dữ liệu → phải trả 12 tháng GẦN NHẤT', async () => {
+    // Tạo orders trải dài 15 tháng (2025-01 → 2026-03)
+    const orders = []
+    for (let m = 1; m <= 12; m++) {
+      orders.push({
+        user: regularUser._id,
+        items: [{ product: new mongoose.Types.ObjectId(), name: 'P', image: '', price: 100, quantity: 1 }],
+        shippingAddress: { address: '1 St', city: 'HCM', country: 'VN' },
+        paymentMethod: 'COD',
+        itemsPrice: 100,
+        shippingPrice: 0,
+        taxPrice: 8,
+        totalPrice: 108,
+        isPaid: true,
+        paidAt: new Date(`2025-${String(m).padStart(2, '0')}-15`),
+        createdAt: new Date(`2025-${String(m).padStart(2, '0')}-15`),
+      })
+    }
+    for (let m = 1; m <= 3; m++) {
+      orders.push({
+        user: regularUser._id,
+        items: [{ product: new mongoose.Types.ObjectId(), name: 'P', image: '', price: 200, quantity: 1 }],
+        shippingAddress: { address: '1 St', city: 'HCM', country: 'VN' },
+        paymentMethod: 'COD',
+        itemsPrice: 200,
+        shippingPrice: 0,
+        taxPrice: 16,
+        totalPrice: 216,
+        isPaid: true,
+        paidAt: new Date(`2026-${String(m).padStart(2, '0')}-15`),
+        createdAt: new Date(`2026-${String(m).padStart(2, '0')}-15`),
+      })
+    }
+    await Order.insertMany(orders)
+
+    const res = await request(app)
+      .get('/api/admin/revenue')
+      .set('Authorization', `Bearer ${adminToken}`)
+
+    expect(res.statusCode).toBe(200)
+    expect(res.body.data).toHaveLength(12)
+
+    // Đúng: tháng cuối cùng phải là 2026-03 (tháng gần nhất)
+    // BUG: tháng cuối là 2025-12 (cũ nhất)
+    const lastEntry = res.body.data[res.body.data.length - 1]
+    expect(lastEntry.year ?? lastEntry._id?.year).toBe(2026)
+  })
+})

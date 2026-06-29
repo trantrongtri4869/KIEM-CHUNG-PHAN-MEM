@@ -278,3 +278,106 @@ describe('PUT /api/orders/:id/status', () => {
     expect(res.statusCode).toBe(403)
   })
 })
+
+// ==================== OCTC_1.3 — items=[] → phải bị từ chối ====================
+// BUG: không có guard items.length > 0 → đơn rỗng vẫn được tạo
+describe('POST /api/orders — OCTC_1.3', () => {
+  it('OCTC_1.3 (BUG) — items=[] → phải trả 400, không tạo đơn rỗng', async () => {
+    const res = await request(app)
+      .post('/api/orders')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({
+        items: [],
+        shippingAddress: { address: '123 Test St', city: 'HCM', country: 'VN' },
+        paymentMethod: 'COD',
+      })
+
+    // BUG: backend hiện tạo đơn rỗng với itemsPrice=0 thay vì reject
+    expect(res.statusCode).toBe(400)
+  })
+})
+
+// ==================== OCTC_1.6 — quantity > stock → phải bị từ chối ====================
+// BUG: $inc:{stock:-quantity} chạy không kiểm tra tồn kho → stock có thể âm
+describe('POST /api/orders — OCTC_1.6', () => {
+  it('OCTC_1.6 (BUG) — quantity > stock → phải từ chối hoặc giới hạn theo tồn kho', async () => {
+    // testProduct có stock=100, đặt 999 vượt tồn kho
+    const res = await request(app)
+      .post('/api/orders')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send(makeOrderBody({
+        items: [{ product: testProduct._id, name: 'Test', image: '', price: 99.99, quantity: 999 }],
+      }))
+
+    // BUG: backend cho phép tạo → stock thành -899
+    // Đúng: phải trả 400 hoặc giới hạn quantity
+    if (res.statusCode === 201) {
+      // Nếu backend không chặn, kiểm tra stock không âm
+      const updated = await Product.findById(testProduct._id)
+      expect(updated.stock).toBeGreaterThanOrEqual(0)
+    } else {
+      expect(res.statusCode).toBe(400)
+    }
+  })
+
+  it('OCTC_1.6 — stock bị âm sau khi đặt vượt tồn kho (confirm BUG)', async () => {
+    const lowStockProduct = await Product.create(
+      require('../helpers/factories').productPayload({ slug: 'low-stock', stock: 3 })
+    )
+
+    await request(app)
+      .post('/api/orders')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send(makeOrderBody({
+        items: [{ product: lowStockProduct._id, name: 'Test', image: '', price: 99.99, quantity: 5 }],
+      }))
+
+    const updated = await Product.findById(lowStockProduct._id)
+    // BUG xác nhận: stock = 3 - 5 = -2
+    // Kỳ vọng đúng: stock >= 0
+    expect(updated.stock).toBeGreaterThanOrEqual(0)
+  })
+})
+
+// ==================== OCTC_5.2 — status invalid → phải 400, không phải 500 ====================
+// BUG: Mongoose ValidationError bị catch → trả 500 thay vì 400
+describe('PUT /api/orders/:id/status — OCTC_5.2', () => {
+  it('OCTC_5.2 (BUG) — status không hợp lệ → phải trả 400, không phải 500', async () => {
+    const order = await Order.create({
+      user: regularUser._id,
+      ...makeOrderBody(),
+      itemsPrice: 199.98,
+      totalPrice: 225.97,
+    })
+
+    const res = await request(app)
+      .put(`/api/orders/${order._id}/status`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ status: 'invalid_status' })
+
+    // BUG: backend trả 500 (ValidationError không được xử lý đúng)
+    // Đúng: phải trả 400 Bad Request
+    expect(res.statusCode).toBe(400)
+    expect(res.statusCode).not.toBe(500)
+  })
+})
+
+// ==================== OCTC_6.5 — thiếu total → minOrder check bị bỏ qua ====================
+// BUG: undefined < minOrder = false → coupon pass dù không có total
+describe('POST /api/coupons/validate — OCTC_6.5', () => {
+  it('OCTC_6.5 (BUG) — không gửi total → phải trả 400, không được pass coupon', async () => {
+    const { Coupon: CouponModel } = require('../../src/models')
+    await CouponModel.create(
+      require('../helpers/factories').couponPayload({ code: 'NOTABLE', minOrder: 100 })
+    )
+
+    const res = await request(app)
+      .post('/api/coupons/validate')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({ code: 'NOTABLE' }) // không có total
+
+    // BUG: undefined < 100 = false → minOrder check bị bỏ qua → trả 200
+    // Đúng: phải trả 400 thiếu dữ liệu đầu vào
+    expect(res.statusCode).toBe(400)
+  })
+})
