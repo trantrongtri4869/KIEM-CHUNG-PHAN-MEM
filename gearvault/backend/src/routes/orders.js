@@ -16,9 +16,6 @@ router.post('/', protect, async (req, res) => {
 
     if (couponCode) {
       const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true })
-      if (!coupon) {
-        return res.status(400).json({ success: false, message: "Mã giảm giá không tồn tại!" });
-      }
       if (coupon && coupon.usedCount < coupon.maxUses && new Date() < coupon.expiresAt) {
         couponDiscount = coupon.discount
         coupon.usedCount++
@@ -80,7 +77,7 @@ router.get('/:id', protect, async (req, res) => {
 router.put('/:id/status', protect, adminOnly, async (req, res) => {
   try {
     const { status } = req.body
-    const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled']
+    const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
     if (!validStatuses.includes(status)) {
         return res.status(400).json({ success: false, message: "Trạng thái không hợp lệ" })
     }
