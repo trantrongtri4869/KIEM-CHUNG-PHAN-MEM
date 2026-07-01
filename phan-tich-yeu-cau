@@ -2,8 +2,7 @@
  
   
 
-# 1. Giới thiệu dự án
-
+ 
 GearVault là một website thương mại điện tử chuyên bán các thiết bị gaming như chuột, bàn phím, tai nghe và phụ kiện gaming. Hệ thống được xây dựng theo mô hình Full-stack sử dụng React, Node.js, Express và MongoDB.
 
 Dự án được phát triển nhằm mục đích:

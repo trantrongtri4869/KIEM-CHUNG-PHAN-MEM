@@ -6,7 +6,7 @@
 
 -Demo · Ảnh giao diện · Hướng dẫn chạy
 
-</div>
+</div> 
 
 ---
 
@@ -378,5 +378,5 @@ MIT License © 2024 GearVault
 ---
 
 <div align="center">
-Dự án được xây dựng phục vụ mục đích học tập và portfolio
+Dự án được xây dựng phục vụ mục đích học tập và portfolio.
 </div>
