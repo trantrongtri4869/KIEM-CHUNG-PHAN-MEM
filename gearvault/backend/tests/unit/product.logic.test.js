@@ -46,6 +46,7 @@ function isFlashSaleActive(product, now = new Date()) {
   if (!product.isFlashSale || !product.flashSaleEndsAt) return false
   return now < new Date(product.flashSaleEndsAt)
 }
+
 describe('buildProductFilter()', () => {
   
   // PCTC_1_1: Không có filter
@@ -87,5 +88,40 @@ describe('buildProductFilter()', () => {
   test('Filter đúng rating=5', () => {
     const filter = buildProductFilter({ rating: '4' });
     expect(filter.rating).toEqual({ $gte: 4 });
+  });
+  // PCTC_2_1: featured=true
+  test('filter featured=true', () => {
+    const filter = buildProductFilter({ featured: 'true' })
+    expect(filter.isFeatured).toBe(true)
+  });
+  // PCTC_2_1: featured=false
+  test('Filter không chứa isFeatured khi featured="false"', () => {
+    // Gọi filter với giá trị biên hoặc không có sản phẩm featured
+    const filter = buildProductFilter({ featured: 'false' });
+    expect(filter.isFeatured).toBeUndefined();
+  });
+});
+describe('Best Sellers', () => {
+  
+  // Test cho logic sắp xếp (PCTC_3_1)
+  describe('buildSort()', () => {
+    test('Sắp xếp giảm dần theo sold khi chọn popular', () => {
+      const sort = buildSort('popular');
+      expect(sort).toEqual({ sold: -1 }); // Kiểm tra logic sort giảm dần
+    });
+  });
+
+  // Test cho logic giới hạn số lượng (PCTC_3_1 & PCTC_3_2)
+  describe('calcPagination()', () => {
+    test('Đảm bảo limit luôn là 8 cho danh sách Best Sellers', () => {
+      const { limit } = calcPagination(1, 8, 100); 
+      expect(limit).toBe(8); // Kiểm tra giới hạn trả về tối đa 8 sản phẩm
+    });
+
+    test('Vẫn trả về limit=8 ngay cả khi sold=0 (biên dữ liệu)', () => {
+      // Logic vẫn hoạt động bình thường, không bị lỗi khi sold=0
+      const { limit } = calcPagination(1, 8, 0); 
+      expect(limit).toBe(8); 
+    });
   });
 });
