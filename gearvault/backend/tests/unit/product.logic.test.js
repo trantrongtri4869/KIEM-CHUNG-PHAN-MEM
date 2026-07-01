@@ -101,8 +101,8 @@ describe('buildProductFilter()', () => {
     expect(filter.isFeatured).toBeUndefined();
   });
 });
+
 describe('Best Sellers', () => {
-  
   // Test cho logic sắp xếp (PCTC_3_1)
   describe('buildSort()', () => {
     test('Sắp xếp giảm dần theo sold khi chọn popular', () => {
@@ -123,5 +123,26 @@ describe('Best Sellers', () => {
       const { limit } = calcPagination(1, 8, 0); 
       expect(limit).toBe(8); 
     });
+  });
+});
+
+describe('isFlashSaleActive()', () => {
+  const now = new Date(); // Mốc thời gian hiện tại cố định
+  const future = new Date(now.getTime() + 3600000); // 1h sau
+  const past = new Date(now.getTime() - 3600000); // 1h trước
+  // PCTC_4_1: flash sale còn hạn 
+  test('Trả true khi flash sale còn hạn', () => {
+    const product = { isFlashSale: true, flashSaleEndsAt: future };
+    expect(isFlashSaleActive(product, now)).toBe(true);
+  });
+  // PCTC_4_2: flash sale is now
+  test('Trả false khi flash sale hết hạn đúng bằng thời điểm hiện tại', () => {
+    const product = { isFlashSale: true, flashSaleEndsAt: now };
+    expect(isFlashSaleActive(product, now)).toBe(false);
+  });
+  // PCTC_4_3: flash sale hết hạn
+  test('Trả false khi flash sale đã hết hạn', () => {
+    const product = { isFlashSale: true, flashSaleEndsAt: past };
+    expect(isFlashSaleActive(product, now)).toBe(false);
   });
 });
