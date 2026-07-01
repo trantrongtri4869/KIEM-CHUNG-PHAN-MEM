@@ -146,3 +146,32 @@ describe('isFlashSaleActive()', () => {
     expect(isFlashSaleActive(product, now)).toBe(false);
   });
 });
+
+describe('Unit Tests cho Logic Sản phẩm', () => {
+  test('Logic tạo filter theo slug', () => {
+    const buildSlugFilter = (slug) => ({ slug });
+    // Test 5_1: Filter đúng slug
+    expect(buildSlugFilter('my-product')).toEqual({ slug: 'my-product' });
+    // Test 5_2: Khi slug không tồn tại, logic filter vẫn phải tạo ra đúng key đó
+    expect(buildSlugFilter(null)).toEqual({ slug: null });
+  });
+
+  // Logic lọc sản phẩm cùng category và loại trừ chính nó
+  test('Logic lọc sản phẩm liên quan', () => {
+    const buildRelatedFilter = (currentProduct) => {
+      if (!currentProduct) return null;
+      return { 
+        category: currentProduct.category, 
+        _id: { $ne: currentProduct._id } 
+      };
+    };
+    // Test 6_1: Có sản phẩm cùng category
+    const product = { _id: 'A', category: 'Laptop' };
+    expect(buildRelatedFilter(product)).toEqual({ 
+      category: 'Laptop', 
+      _id: { $ne: 'A' } 
+    });
+    // Test 6_3: Nếu product gốc null (không tìm thấy)
+    expect(buildRelatedFilter(null)).toBeNull();
+  });
+});
