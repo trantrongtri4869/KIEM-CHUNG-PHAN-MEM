@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink, Outlet, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -10,7 +10,8 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar
 } from 'recharts'
-import { MOCK_PRODUCTS } from '../utils/mockData'
+import { productAPI, orderAPI } from '../services/api'
+import { Product } from '../types'
 import toast from 'react-hot-toast'
 
 const REVENUE_DATA = [
@@ -23,6 +24,8 @@ const REVENUE_DATA = [
   { month: 'Mar', revenue: 24500, orders: 182 },
 ]
 
+// NOTE: no backend endpoint exists yet for listing all users (admin) or revenue
+// analytics, so these two stay as demo data until such an API is added.
 const MOCK_USERS_DATA = [
   { id: 'u1', name: 'Alex Chen', email: 'alex@example.com', orders: 5, total: 849.95, role: 'user', joined: '2024-01-10' },
   { id: 'u2', name: 'Sarah Kim', email: 'sarah@example.com', orders: 3, total: 339.98, role: 'user', joined: '2024-01-15' },
@@ -85,6 +88,15 @@ export default function AdminLayout() {
 
 // ---- Admin Overview ----
 export function AdminOverview() {
+  const [topProducts, setTopProducts] = useState<Product[]>([])
+
+  useEffect(() => {
+    productAPI
+      .getBestSellers()
+      .then((res) => setTopProducts(res.data.data.slice(0, 4)))
+      .catch(() => setTopProducts([]))
+  }, [])
+
   const stats = [
     { label: 'Total Revenue', value: '$141,500', change: '+12.5%', up: true, icon: DollarSign, color: 'text-emerald-600' },
     { label: 'Total Orders', value: '1,047', change: '+8.2%', up: true, icon: ShoppingBag, color: 'text-brand-600' },
@@ -173,7 +185,7 @@ export function AdminOverview() {
         <div className="card p-6">
           <h3 className="font-bold text-[var(--text-primary)] mb-5">Top Products</h3>
           <div className="space-y-3">
-            {MOCK_PRODUCTS.sort((a, b) => b.sold - a.sold).slice(0, 4).map((p) => (
+            {topProducts.map((p) => (
               <div key={p._id} className="flex items-center gap-3">
                 <img src={p.images[0]} alt={p.name} className="w-10 h-10 rounded-lg object-cover" />
                 <div className="flex-1 min-w-0">
@@ -200,9 +212,40 @@ export function AdminOverview() {
 // ---- Admin Products ----
 export function AdminProducts() {
   const [search, setSearch] = useState('')
-  const products = MOCK_PRODUCTS.filter(
+  const [allProducts, setAllProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const loadProducts = () => {
+    setLoading(true)
+    productAPI
+      .getAll({ limit: 200 })
+      .then((res) => setAllProducts(res.data.data))
+      .catch(() => setAllProducts([]))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    loadProducts()
+  }, [])
+
+  const products = allProducts.filter(
     (p) => p.name.toLowerCase().includes(search.toLowerCase()) || p.brand.toLowerCase().includes(search.toLowerCase())
   )
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return
+    try {
+      await productAPI.delete(id)
+      toast.success(`${name} deleted`)
+      loadProducts()
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to delete product')
+    }
+  }
+
+  if (loading) {
+    return <div className="py-12 text-center text-[var(--text-muted)]">Loading products...</div>
+  }
 
   return (
     <div className="space-y-5">
@@ -272,7 +315,7 @@ export function AdminProducts() {
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={() => toast.error('Delete would prompt confirmation')}
+                        onClick={() => handleDelete(p._id, p.name)}
                         className="p-1.5 text-[var(--text-muted)] hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -337,18 +380,35 @@ export function AdminUsers() {
   )
 }
 
+interface AdminOrder {
+  _id: string
+  user?: { name: string; email: string }
+  createdAt: string
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+  totalPrice: number
+  items: { quantity: number }[]
+}
+
 // ---- Admin Orders ----
 export function AdminOrders() {
-  const ORDERS = [
-    { id: 'GV-AB12CD', user: 'Alex Chen', date: '2024-02-10', status: 'delivered', total: 329.98, items: 2 },
-    { id: 'GV-EF34GH', user: 'Sarah Kim', date: '2024-01-28', status: 'shipped', total: 179.99, items: 1 },
-    { id: 'GV-IJ56KL', user: 'Mike Torres', date: '2024-01-15', status: 'processing', total: 49.99, items: 1 },
-    { id: 'GV-MN78OP', user: 'Emma Wilson', date: '2024-01-10', status: 'cancelled', total: 699.99, items: 1 },
-  ]
+  const [orders, setOrders] = useState<AdminOrder[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    orderAPI
+      .getAll()
+      .then((res) => setOrders(res.data.data))
+      .catch(() => setOrders([]))
+      .finally(() => setLoading(false))
+  }, [])
 
   const STATUS_COLOR: Record<string, string> = {
     pending: 'badge-warning', processing: 'badge-info',
     shipped: 'badge-info', delivered: 'badge-success', cancelled: 'badge-danger',
+  }
+
+  if (loading) {
+    return <div className="py-12 text-center text-[var(--text-muted)]">Loading orders...</div>
   }
 
   return (
@@ -365,19 +425,19 @@ export function AdminOrders() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
-              {ORDERS.map((o) => (
-                <tr key={o.id} className="hover:bg-surface-50 dark:hover:bg-surface-800/30 transition-colors">
-                  <td className="px-4 py-3 font-mono font-bold text-xs text-[var(--text-primary)]">{o.id}</td>
-                  <td className="px-4 py-3 text-[var(--text-secondary)]">{o.user}</td>
-                  <td className="px-4 py-3 text-[var(--text-secondary)]">{new Date(o.date).toLocaleDateString()}</td>
-                  <td className="px-4 py-3 text-[var(--text-secondary)]">{o.items} item{o.items !== 1 ? 's' : ''}</td>
+              {orders.map((o) => (
+                <tr key={o._id} className="hover:bg-surface-50 dark:hover:bg-surface-800/30 transition-colors">
+                  <td className="px-4 py-3 font-mono font-bold text-xs text-[var(--text-primary)]">#{o._id.slice(-8).toUpperCase()}</td>
+                  <td className="px-4 py-3 text-[var(--text-secondary)]">{o.user?.name || 'Unknown'}</td>
+                  <td className="px-4 py-3 text-[var(--text-secondary)]">{new Date(o.createdAt).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-[var(--text-secondary)]">{o.items.length} item{o.items.length !== 1 ? 's' : ''}</td>
                   <td className="px-4 py-3">
                     <span className={`badge ${STATUS_COLOR[o.status]} capitalize`}>{o.status}</span>
                   </td>
-                  <td className="px-4 py-3 font-bold text-[var(--text-primary)]">${o.total.toFixed(2)}</td>
+                  <td className="px-4 py-3 font-bold text-[var(--text-primary)]">${o.totalPrice.toFixed(2)}</td>
                   <td className="px-4 py-3">
                     <button
-                      onClick={() => toast.success(`Viewing order ${o.id}`)}
+                      onClick={() => toast.success(`Viewing order #${o._id.slice(-8).toUpperCase()}`)}
                       className="text-xs text-brand-600 hover:text-brand-700 font-medium"
                     >
                       View

@@ -9,6 +9,7 @@ import {
   Lock, AlertCircle, Package, ArrowLeft
 } from 'lucide-react'
 import { useCartStore, useAuthStore } from '../store'
+import { orderAPI } from '../services/api'
 
 const shippingSchema = z.object({
   fullName: z.string().min(2, 'Full name is required'),
@@ -114,10 +115,33 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     setIsPlacing(true)
-    await new Promise((r) => setTimeout(r, 2000))
-    clearCart()
-    setOrderSuccess(true)
-    setIsPlacing(false)
+    try {
+      const shipping = getValues()
+
+      await orderAPI.create({
+        items: items.map((i) => ({
+          product: i.product._id,
+          quantity: i.quantity,
+          price: i.product.price,
+        })),
+        shippingAddress: {
+          fullName: shipping.fullName,
+          phone: shipping.phone,
+          address: shipping.address,
+          city: shipping.city,
+          country: shipping.country,
+        },
+        paymentMethod: paymentMethod === 'cod' ? 'COD' : paymentMethod,
+      })
+
+      clearCart()
+      setOrderSuccess(true)
+    } catch (err) {
+      console.error('Đặt hàng thất bại:', err)
+      alert('Đặt hàng thất bại, vui lòng thử lại.')
+    } finally {
+      setIsPlacing(false)
+    }
   }
 
   return (

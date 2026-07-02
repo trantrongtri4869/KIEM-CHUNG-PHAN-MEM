@@ -6,8 +6,10 @@ import {
   ChevronRight, Star, Timer
 } from 'lucide-react'
 import ProductCard from '../components/product/ProductCard'
-import { MOCK_PRODUCTS, MOCK_CATEGORIES, TESTIMONIALS } from '../utils/mockData'
+import { MOCK_CATEGORIES, TESTIMONIALS } from '../utils/mockData'
 import { useCartStore } from '../store'
+import { productAPI } from '../services/api'
+import { Product } from '../types'
 import toast from 'react-hot-toast'
 
 function useCountdown(targetDate: string) {
@@ -58,11 +60,18 @@ function SectionReveal({ children, className = '' }: { children: React.ReactNode
 
 export default function HomePage() {
   const { addItem } = useCartStore()
-  const flashSaleProducts = MOCK_PRODUCTS.filter((p) => p.isFlashSale)
+  const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([])
+  const [featured, setFeatured] = useState<Product[]>([])
+  const [bestSellers, setBestSellers] = useState<Product[]>([])
+
+  useEffect(() => {
+    productAPI.getFlashSale().then((res) => setFlashSaleProducts(res.data.data)).catch(() => setFlashSaleProducts([]))
+    productAPI.getFeatured().then((res) => setFeatured(res.data.data.slice(0, 4))).catch(() => setFeatured([]))
+    productAPI.getBestSellers().then((res) => setBestSellers(res.data.data.slice(0, 4))).catch(() => setBestSellers([]))
+  }, [])
+
   const flashSaleEnd = flashSaleProducts[0]?.flashSaleEndsAt || new Date(Date.now() + 6 * 3600000).toISOString()
   const countdown = useCountdown(flashSaleEnd)
-  const featured = MOCK_PRODUCTS.filter((p) => p.isFeatured).slice(0, 4)
-  const bestSellers = MOCK_PRODUCTS.sort((a, b) => b.sold - a.sold).slice(0, 4)
 
   return (
     <div className="page-enter">

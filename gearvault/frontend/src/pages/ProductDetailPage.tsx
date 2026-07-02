@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ShoppingCart, Heart, ArrowLeft, Star, Minus, Plus,
   Truck, Shield, RefreshCcw, Check, ChevronRight, Zap
 } from 'lucide-react'
-import { MOCK_PRODUCTS, MOCK_REVIEWS } from '../utils/mockData'
+import { MOCK_REVIEWS } from '../utils/mockData'
+import { productAPI } from '../services/api'
+import { Product } from '../types'
 import { useCartStore, useWishlistStore, useAuthStore } from '../store'
 import ProductCard from '../components/product/ProductCard'
 import StarRating from '../components/ui/StarRating'
@@ -15,7 +17,9 @@ export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
 
-  const product = MOCK_PRODUCTS.find((p) => p.slug === slug)
+  const [product, setProduct] = useState<Product | null>(null)
+  const [related, setRelated] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
   const { addItem } = useCartStore()
   const { toggleItem, isInWishlist } = useWishlistStore()
   const { isAuthenticated } = useAuthStore()
@@ -25,6 +29,25 @@ export default function ProductDetailPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'specs' | 'reviews'>('overview')
   const [reviewRating, setReviewRating] = useState(5)
   const [reviewText, setReviewText] = useState('')
+
+  useEffect(() => {
+    if (!slug) return
+    setLoading(true)
+    setSelectedImage(0)
+    productAPI
+      .getBySlug(slug)
+      .then((res) => setProduct(res.data.data))
+      .catch(() => setProduct(null))
+      .finally(() => setLoading(false))
+    productAPI
+      .getRelated(slug)
+      .then((res) => setRelated(res.data.data))
+      .catch(() => setRelated([]))
+  }, [slug])
+
+  if (loading) {
+    return <div className="flex items-center justify-center py-24 text-[var(--text-muted)]">Loading...</div>
+  }
 
   if (!product) {
     return (
@@ -38,9 +61,6 @@ export default function ProductDetailPage() {
   const inWishlist = isInWishlist(product._id)
   const isOutOfStock = product.stock === 0
   const reviews = MOCK_REVIEWS.filter((r) => r.product === product._id)
-  const related = MOCK_PRODUCTS.filter(
-    (p) => p.category === product.category && p._id !== product._id
-  ).slice(0, 4)
 
   const handleAddToCart = () => {
     if (isOutOfStock) return

@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Filter, SlidersHorizontal, X, ChevronDown, Search, Grid2X2, List } from 'lucide-react'
 import ProductCard, { ProductCardSkeleton } from '../components/product/ProductCard'
-import { MOCK_PRODUCTS, MOCK_CATEGORIES, BRANDS, PRICE_RANGES } from '../utils/mockData'
+import { MOCK_CATEGORIES, BRANDS, PRICE_RANGES } from '../utils/mockData'
+import { productAPI } from '../services/api'
 import { Product } from '../types'
 
 const SORT_OPTIONS = [
@@ -27,7 +28,17 @@ function sortProducts(products: Product[], sort: string) {
 export default function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [isLoading] = useState(false)
+  const [allProducts, setAllProducts] = useState<Product[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    setIsLoading(true)
+    productAPI
+      .getAll({ limit: 200 })
+      .then((res) => setAllProducts(res.data.data))
+      .catch(() => setAllProducts([]))
+      .finally(() => setIsLoading(false))
+  }, [])
 
   const searchQuery = searchParams.get('search') || ''
   const categoryParam = searchParams.get('category') || ''
@@ -43,7 +54,7 @@ export default function ProductsPage() {
   const [localSearch, setLocalSearch] = useState(searchQuery)
 
   const filtered = useMemo(() => {
-    let products = MOCK_PRODUCTS
+    let products = allProducts
 
     if (localSearch) {
       const q = localSearch.toLowerCase()
@@ -81,7 +92,7 @@ export default function ProductsPage() {
     }
 
     return sortProducts(products, sortParam)
-  }, [localSearch, selectedCategories, selectedBrands, priceRange, minRating, sortParam, saleParam])
+  }, [allProducts, localSearch, selectedCategories, selectedBrands, priceRange, minRating, sortParam, saleParam])
 
   const toggleCategory = (slug: string) => {
     setSelectedCategories((prev) =>
