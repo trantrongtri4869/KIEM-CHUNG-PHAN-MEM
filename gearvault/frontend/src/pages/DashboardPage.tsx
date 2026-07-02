@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -6,9 +6,25 @@ import {
   ChevronRight, Star, Clock, CheckCircle2, Truck
 } from 'lucide-react'
 import { useAuthStore, useWishlistStore } from '../store'
-import { MOCK_PRODUCTS } from '../utils/mockData'
+import { orderAPI } from '../services/api'
 import ProductCard from '../components/product/ProductCard'
 import toast from 'react-hot-toast'
+
+interface OrderItem {
+  _id: string
+  name: string
+  image: string
+  price: number
+  quantity: number
+}
+
+interface Order {
+  _id: string
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+  totalPrice: number
+  createdAt: string
+  items: OrderItem[]
+}
 
 const NAV_ITEMS = [
   { label: 'Profile', href: '/dashboard', icon: User, exact: true },
@@ -17,29 +33,20 @@ const NAV_ITEMS = [
   { label: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]
 
-const MOCK_ORDERS = [
-  {
-    id: 'GV-AB12CD',
-    date: '2024-02-10',
-    status: 'delivered' as const,
-    total: 329.98,
-    items: [MOCK_PRODUCTS[0], MOCK_PRODUCTS[2]],
-  },
-  {
-    id: 'GV-EF34GH',
-    date: '2024-01-28',
-    status: 'shipped' as const,
-    total: 179.99,
-    items: [MOCK_PRODUCTS[3]],
-  },
-  {
-    id: 'GV-IJ56KL',
-    date: '2024-01-15',
-    status: 'processing' as const,
-    total: 49.99,
-    items: [MOCK_PRODUCTS[6]],
-  },
-]
+function useMyOrders() {
+  const [orders, setOrders] = useState<Order[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    orderAPI
+      .getMyOrders()
+      .then((res) => setOrders(res.data.data))
+      .catch(() => setOrders([]))
+      .finally(() => setLoading(false))
+  }, [])
+
+  return { orders, loading }
+}
 
 const ORDER_STATUS_CONFIG = {
   pending: { label: 'Pending', color: 'badge-warning', icon: Clock },
@@ -137,6 +144,8 @@ export default function DashboardLayout() {
 export function ProfileTab() {
   const { user, updateUser } = useAuthStore()
   const [saved, setSaved] = useState(false)
+  const { orders } = useMyOrders()
+  const { items: wishlistItems } = useWishlistStore()
 
   const handleSave = () => {
     setSaved(true)
@@ -185,8 +194,8 @@ export function ProfileTab() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Total Orders', value: MOCK_ORDERS.length },
-          { label: 'Wishlist Items', value: 4 },
+          { label: 'Total Orders', value: orders.length },
+          { label: 'Wishlist Items', value: wishlistItems.length },
           { label: 'Reviews', value: 2 },
         ].map((stat) => (
           <div key={stat.label} className="card p-5 text-center">
@@ -201,38 +210,48 @@ export function ProfileTab() {
 
 // ---- Orders Tab ----
 export function OrdersTab() {
+  const { orders, loading } = useMyOrders()
+
+  if (loading) {
+    return <div className="py-12 text-center text-[var(--text-muted)]">Loading orders...</div>
+  }
+
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-bold text-[var(--text-primary)]">My Orders</h1>
-      {MOCK_ORDERS.length === 0 ? (
+      {orders.length === 0 ? (
         <div className="card p-12 text-center">
           <Package className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-4" />
           <p className="font-semibold text-[var(--text-primary)] mb-2">No orders yet</p>
           <Link to="/products" className="btn-primary text-sm">Start Shopping</Link>
         </div>
       ) : (
-        MOCK_ORDERS.map((order) => {
-          const config = ORDER_STATUS_CONFIG[order.status]
+        orders.map((order) => {
+          const config = ORDER_STATUS_CONFIG[order.status] || ORDER_STATUS_CONFIG.pending
           const Icon = config.icon
           return (
-            <div key={order.id} className="card p-5">
+            <div key={order._id} className="card p-5">
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div>
-                  <p className="font-mono font-bold text-sm text-[var(--text-primary)]">{order.id}</p>
-                  <p className="text-xs text-[var(--text-muted)] mt-0.5">{new Date(order.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                  <p className="font-mono font-bold text-sm text-[var(--text-primary)]">
+                    #{order._id.slice(-8).toUpperCase()}
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                    {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`badge ${config.color} flex items-center gap-1`}>
                     <Icon className="w-3 h-3" />{config.label}
                   </span>
-                  <span className="font-bold text-sm text-[var(--text-primary)]">${order.total.toFixed(2)}</span>
+                  <span className="font-bold text-sm text-[var(--text-primary)]">${order.totalPrice.toFixed(2)}</span>
                 </div>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-3 flex-wrap">
                 {order.items.map((item) => (
                   <div key={item._id} className="flex items-center gap-2">
                     <img
-                      src={item.images[0]}
+                      src={item.image}
                       alt={item.name}
                       className="w-12 h-12 rounded-lg object-cover bg-surface-100"
                     />

@@ -2,9 +2,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, ShoppingBag, Trash2, Plus, Minus, ArrowRight, Tag } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useCartStore } from '../../store'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
-import { MOCK_PRODUCTS } from '../../utils/mockData'
+import { productAPI } from '../../services/api'
+import { Product } from '../../types'
 
 const VALID_COUPONS: Record<string, number> = {
   'GEAR10': 10,
@@ -43,7 +44,15 @@ export default function CartDrawer() {
   }
 
   // Quick-add related product
-  const suggestedProduct = MOCK_PRODUCTS.find(
+  const [suggestions, setSuggestions] = useState<Product[]>([])
+  useEffect(() => {
+    if (!isOpen) return
+    productAPI
+      .getBestSellers()
+      .then((res) => setSuggestions(res.data.data))
+      .catch(() => setSuggestions([]))
+  }, [isOpen])
+  const suggestedProduct = suggestions.find(
     (p) => !items.find((i) => i.product._id === p._id) && p.price < 100
   )
 

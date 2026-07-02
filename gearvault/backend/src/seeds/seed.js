@@ -1,6 +1,6 @@
 require('dotenv').config()
 const mongoose = require('mongoose')
-const { User, Category, Product, Coupon } = require('../models')
+const { User, Category, Product, Coupon, Review, Order } = require('../models')
 
 const CATEGORIES = [
   { name: 'Gaming Mice', slug: 'gaming-mice', description: 'Precision gaming mice for every play style', image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&q=80' },
@@ -272,6 +272,8 @@ async function seed() {
       Category.deleteMany({}),
       Product.deleteMany({}),
       Coupon.deleteMany({}),
+      Review.deleteMany({}),
+      Order.deleteMany({}),
     ])
     console.log('🗑️  Cleared existing data')
 

@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Eye, EyeOff, Zap, AlertCircle, ArrowRight } from 'lucide-react'
 import { useAuthStore } from '../store'
+import { authAPI } from '../services/api'
 import toast from 'react-hot-toast'
 
 // ==================== LOGIN PAGE ====================
@@ -38,23 +39,19 @@ export function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     setLoading(true)
     setAuthError('')
-    await new Promise((r) => setTimeout(r, 1000))
-
-    const account = MOCK_ACCOUNTS.find(
-      (a) => a.email === data.email && a.password === data.password
-    )
-
-    if (account) {
-      login(
-        { _id: Math.random().toString(), name: account.name, email: account.email, role: account.role, createdAt: new Date().toISOString() },
-        'mock-jwt-token-' + Date.now()
-      )
-      toast.success(`Welcome back, ${account.name}!`)
+    try {
+      const res = await authAPI.login(data.email, data.password)
+      const { user, token } = res.data.data
+      login(user, token)
+      toast.success(`Welcome back, ${user.name}!`)
       navigate(from, { replace: true })
-    } else {
-      setAuthError('Invalid email or password. Try: user@gearvault.com / user123')
+    } catch (err: any) {
+      setAuthError(
+        err?.response?.data?.message || 'Invalid email or password.'
+      )
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const fillDemo = (type: 'user' | 'admin') => {
@@ -240,20 +237,17 @@ export function RegisterPage() {
 
   const onSubmit = async (data: RegisterForm) => {
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 1200))
-    login(
-      {
-        _id: Math.random().toString(),
-        name: data.name,
-        email: data.email,
-        role: 'user',
-        createdAt: new Date().toISOString(),
-      },
-      'mock-jwt-token-' + Date.now()
-    )
-    toast.success(`Welcome to GearVault, ${data.name}! 🎮`)
-    navigate('/')
-    setLoading(false)
+    try {
+      const res = await authAPI.register(data.name, data.email, data.password)
+      const { user, token } = res.data.data
+      login(user, token)
+      toast.success(`Welcome to GearVault, ${user.name}! 🎮`)
+      navigate('/')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Đăng ký thất bại, vui lòng thử lại.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
