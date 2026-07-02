@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 const { User } = require('../models'); 
-require('dotenv').config({ path: '../../.env' }); // Đường dẫn tới .env
+require('dotenv').config({ path: '../../.env' }); 
 
 const seedAdmin = async () => {
-    console.log("--- Bắt đầu script tạo Admin ---"); // Dòng này giúp bạn biết script đã chạy
+    console.log("--- Bắt đầu script tạo Admin ---"); 
     try {
         await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/gearvault');
         

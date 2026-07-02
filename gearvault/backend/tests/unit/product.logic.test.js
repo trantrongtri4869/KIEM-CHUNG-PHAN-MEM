@@ -1,52 +1,21 @@
-// Dựa trên logic của PCTC_1_1 đến PCTC_1_7
-function buildProductFilter(query) {
-  const { category, brand, minPrice, maxPrice, rating, featured, sale, search } = query
-  const filter = {}
+const { Product } = require('../../src/models');
+const { 
+  buildProductFilter, 
+  buildSort, 
+  calcPagination, 
+  isFlashSaleActive,
+  createProduct, 
+  updateProduct, deleteProduct 
+} = require('../../src/routes/products');
+const { adminOnly } = require('../../src/middleware/auth');
 
-  if (category) filter.category = { $regex: category, $options: 'i' }
-  if (brand) filter.brand = brand
-  if (minPrice || maxPrice) {
-    filter.price = {}
-    if (minPrice) filter.price.$gte = Number(minPrice)
-    if (maxPrice) filter.price.$lte = Number(maxPrice)
+jest.mock('../../src/models', () => ({
+  Product: {
+    create: jest.fn(),
+    findByIdAndUpdate: jest.fn(),
+    findByIdAndDelete: jest.fn(),
   }
-  if (rating) filter.rating = { $gte: Number(rating) }
-  if (featured === 'true') filter.isFeatured = true
-  if (sale === 'true') filter.$or = [{ isFlashSale: true }, { discount: { $exists: true } }]
-  if (search) filter.$text = { $search: search }
-
-  return filter
-}
-
-function buildSort(sortKey) {
-  const sortMap = {
-    newest:     { createdAt: -1 },
-    price_asc:  { price: 1 },
-    price_desc: { price: -1 },
-    rating:     { rating: -1 },
-    popular:    { sold: -1 },
-  }
-  return sortMap[sortKey] || sortMap.newest
-}
-
-function calcPagination(page, limit, total) {
-  const p = Number(page) || 1;
-  const l = Number(limit) || 12;
-  const safePage = Math.max(1, p);
-  return {
-    page: safePage,
-    limit: l,
-    total,
-    pages: Math.ceil(total / l),
-    skip: (safePage - 1) * l,
-  }
-}
-
-function isFlashSaleActive(product, now = new Date()) {
-  if (!product.isFlashSale || !product.flashSaleEndsAt) return false
-  return now < new Date(product.flashSaleEndsAt)
-}
-
+}));
 describe('buildProductFilter()', () => {
   
   // PCTC_1_1: Không có filter
@@ -173,5 +142,106 @@ describe('Unit Tests cho Logic Sản phẩm', () => {
     });
     // Test 6_3: Nếu product gốc null (không tìm thấy)
     expect(buildRelatedFilter(null)).toBeNull();
+  });
+});
+
+describe('Admin Product Controller Tests', () => {
+  let req, res;
+
+  beforeEach(() => {
+    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    jest.clearAllMocks();
+  });
+
+  describe('Create Product', () => {
+    // PCTC_7_1: Dữ liệu đầy đủ
+    test('Tạo thành công dữ liệu hợp lệ', async () => {
+      const mockProduct = { name: 'Test', price: 100 };
+      Product.create.mockResolvedValue({ _id: '123', ...mockProduct });
+      req = { body: mockProduct };
+      await createProduct(req, res);
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
+    });
+    // PCTC_7_2: price = 0
+    test('Dữ liệu price = 0 (Biên dưới hợp lệ)', async () => {
+      Product.create.mockResolvedValue({ _id: '123', price: 0 });
+      req = { body: { name: 'Free Product', price: 0 } };
+      await createProduct(req, res);
+      expect(res.status).toHaveBeenCalledWith(201);
+    });
+    // PCTC_7_3: Biên dưới
+    test('Bắt lỗi validation (price < 0)', async () => {
+      Product.create.mockRejectedValue(new Error('ValidationError'));
+      req = { body: { price: -1 } };
+      await createProduct(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: false }));
+    });
+    // PCTC_7_4: slug bị trùng
+    test('Slug bị trùng (MongoError 11000)', async () => {
+      // Giả lập lỗi trùng key
+      Product.create.mockRejectedValue({ code: 11000, message: 'Duplicate key' });
+      req = { body: { name: 'Test', slug: 'duplicate' } };
+      await createProduct(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+    // PCTC_7_5: ngoài biên quyền
+    test('Role != admin (Access denied)', async () => {
+      const req = { user: { role: 'user' } }; 
+      const res = { 
+        status: jest.fn().mockReturnThis(), 
+        json: jest.fn() 
+      };
+      const next = jest.fn(); // Mock function next của express
+      // Gọi middleware
+      await adminOnly(req, res, next);
+      // Kiểm tra: next() KHÔNG được gọi, res.status(403) được gọi
+      expect(next).not.toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        message: 'Access denied — admin only',
+        success: false
+      });
+    });
+  });
+
+  describe('Update Product', () => {
+    // PCTC_8_1: update thành công
+    test('Update thành công với dữ liệu hợp lệ', async () => {
+      const updatedData = { name: 'New Name' };
+      Product.findByIdAndUpdate.mockResolvedValue({ _id: '123', ...updatedData });
+      req = { params: { id: '123' }, body: updatedData };
+      await updateProduct(req, res);
+      expect(res.status).toHaveBeenCalledWith(200); 
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
+    });
+    // PCTC_8_2: id không tồn tại
+    test('Trả về lỗi khi không tìm thấy ID', async () => {
+      Product.findByIdAndUpdate.mockResolvedValue(null);
+      req = { params: { id: 'wrong-id' }, body: {} };
+      await updateProduct(req, res);
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ message: 'Product not found' }));
+    });
+  });
+
+  describe('Delete Product', () => {
+    // PCTC_9_1: Xóa thành công
+    test('Xóa sản phẩm thành công', async () => {
+      Product.findByIdAndDelete.mockResolvedValue({ _id: '123' });
+      req = { params: { id: '123' } };
+      await deleteProduct(req, res);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
+    });
+    // PCTC_9_2: id không tồn tại
+    test('Trả về lỗi khi xóa ID không tồn tại', async () => {
+      Product.findByIdAndDelete.mockResolvedValue(null);
+      req = { params: { id: 'wrong-id' } };
+      await deleteProduct(req, res);
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ message: 'Product not found' }));
+    });
   });
 });
