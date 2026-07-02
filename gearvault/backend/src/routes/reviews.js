@@ -46,7 +46,17 @@ router.delete('/:id', protect, async (req, res) => {
     if (review.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ success: false, message: 'Not authorized' })
     }
+
+    const productId = review.product
     await review.deleteOne()
+
+    // Tính lại rating trung bình sau khi xoá (về 0 nếu không còn review nào)
+    const remaining = await Review.find({ product: productId })
+    const avgRating = remaining.length
+      ? remaining.reduce((sum, r) => sum + r.rating, 0) / remaining.length
+      : 0
+    await Product.findByIdAndUpdate(productId, { rating: avgRating.toFixed(1), numReviews: remaining.length })
+
     res.json({ success: true, message: 'Review deleted' })
   } catch (error) {
     res.status(500).json({ success: false, message: error.message })
