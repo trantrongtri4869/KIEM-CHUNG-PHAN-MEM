@@ -37,8 +37,9 @@ router.get('/revenue', protect, adminOnly, async (req, res) => {
           orders: { $sum: 1 },
         },
       },
-      { $sort: { '_id.year': 1, '_id.month': 1 } },
-      { $limit: 12 },
+      { $sort: { '_id.year': -1, '_id.month': -1 } }, // mới nhất trước
+      { $limit: 12 }, // lấy đúng 12 tháng gần nhất
+      { $sort: { '_id.year': 1, '_id.month': 1 } }, // sắp lại tăng dần để hiển thị biểu đồ
     ])
     res.json({ success: true, data })
   } catch (error) {
