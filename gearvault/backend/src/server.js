@@ -7,7 +7,7 @@ const rateLimit = require('express-rate-limit')
 const mongoose = require('mongoose')
 
 const authRoutes = require('./routes/auth')
-const productRoutes = require('./routes/products')
+const { router: productRoutes } = require('./routes/products')
 const orderRoutes = require('./routes/orders')
 const userRoutes = require('./routes/users')
 const categoryRoutes = require('./routes/categories')
