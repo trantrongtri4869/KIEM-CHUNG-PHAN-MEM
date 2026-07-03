@@ -202,5 +202,6 @@ router.isFlashSaleActive = isFlashSaleActive;
 router.createProduct = createProduct;
 router.updateProduct = updateProduct;
 router.deleteProduct = deleteProduct;
+router.getCategories = getCategories;
 
 module.exports = router;
