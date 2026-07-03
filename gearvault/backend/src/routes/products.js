@@ -78,19 +78,38 @@ const deleteProduct = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+const getCategories = async (req, res) => {
+  try {
+    const { Category } = require('../models'); 
+    const categories = await Category.find();
+    
+    const categoriesWithCount = await Promise.all(categories.map(async (cat) => {
+      // Đếm sản phẩm theo category (xử lý regex cho PCTC_10_3)
+      const catObj = typeof cat.toObject === 'function' ? cat.toObject() : cat;
+      
+      const count = await Product.countDocuments({ 
+        category: { $regex: catObj.name, $options: 'i' } 
+      });
+      return { ...catObj, productCount: count };
+    }));
+    
+    res.json({ success: true, data: categoriesWithCount });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 // GET /api/products — list with filters
 router.get('/', async (req, res) => {
   try {
     const filter = buildProductFilter(req.query);
-    const [total, products] = await Promise.all([
-      Product.countDocuments(filter),
-      Product.find(filter)
+    const total = await Product.countDocuments(filter);
+    const pagination = calcPagination(req.query.page, req.query.limit, total);
+    const products = await Product.find(filter)
         .sort(buildSort(req.query.sort))
         .skip(pagination.skip)
         .limit(pagination.limit)
-    ]);
-
-    const pagination = calcPagination(req.query.page, req.query.limit, total);
+    
     const now = new Date();
     const productsWithStatus = products.map(product => {
       const p = product.toObject ? product.toObject() : product;
@@ -172,7 +191,10 @@ router.put('/:id', protect, adminOnly, updateProduct)
 // DELETE /api/products/:id (admin)
 router.delete('/:id', protect, adminOnly, deleteProduct)
 
+// GET /api/products/categories
+router.get('/categories', getCategories);
+
 module.exports = { router, buildProductFilter, 
   buildSort, calcPagination, 
   isFlashSaleActive, createProduct, 
-  updateProduct, deleteProduct };
+  updateProduct, deleteProduct, getCategories };
