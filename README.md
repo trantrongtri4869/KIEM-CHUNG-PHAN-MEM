@@ -7,10 +7,7 @@
 
 
 - Một website thương mại điện tử đầy đủ tính năng dành cho thiết bị gaming
-
-
-
--Demo · Ảnh giao diện · Hướng dẫn chạy
+- Demo · Ảnh giao diện · Hướng dẫn chạy
 
 
 
