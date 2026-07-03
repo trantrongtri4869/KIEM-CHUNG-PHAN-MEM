@@ -78,19 +78,22 @@ const deleteProduct = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 // GET /api/products — list with filters
 router.get('/', async (req, res) => {
   try {
     const filter = buildProductFilter(req.query);
-    const [total, products] = await Promise.all([
-      Product.countDocuments(filter),
-      Product.find(filter)
-        .sort(buildSort(req.query.sort))
-        .skip(pagination.skip)
-        .limit(pagination.limit)
-    ]);
 
+    // Tính total trước, rồi mới tính pagination, rồi mới query danh sách
+    // (trước đây pagination được dùng trước khi khai báo -> ReferenceError)
+    const total = await Product.countDocuments(filter);
     const pagination = calcPagination(req.query.page, req.query.limit, total);
+
+    const products = await Product.find(filter)
+      .sort(buildSort(req.query.sort))
+      .skip(pagination.skip)
+      .limit(pagination.limit);
+
     const now = new Date();
     const productsWithStatus = products.map(product => {
       const p = product.toObject ? product.toObject() : product;
@@ -172,7 +175,18 @@ router.put('/:id', protect, adminOnly, updateProduct)
 // DELETE /api/products/:id (admin)
 router.delete('/:id', protect, adminOnly, deleteProduct)
 
-module.exports = { router, buildProductFilter, 
-  buildSort, calcPagination, 
-  isFlashSaleActive, createProduct, 
-  updateProduct, deleteProduct };
+// Gắn các hàm helper vào router để nơi khác (ví dụ unit test) vẫn require được
+// mà không phá vỡ app.use('/api/products', productRoutes) ở server.js
+router.buildProductFilter = buildProductFilter;
+router.buildSort = buildSort;
+router.calcPagination = calcPagination;
+router.isFlashSaleActive = isFlashSaleActive;
+router.createProduct = createProduct;
+router.updateProduct = updateProduct;
+router.deleteProduct = deleteProduct;
+
+// QUAN TRỌNG: export router trực tiếp, không export object { router, ... }
+// vì server.js dùng: const productRoutes = require('./routes/products')
+//                     app.use('/api/products', productRoutes)
+// app.use() cần một router/middleware function, không phải một object thường.
+module.exports = router;

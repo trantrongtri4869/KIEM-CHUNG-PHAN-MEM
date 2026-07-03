@@ -7,9 +7,21 @@ const router = express.Router()
 router.post('/', protect, async (req, res) => {
   try {
     const { items, shippingAddress, paymentMethod, couponCode } = req.body
+
+    if (!items || items.length === 0) {
+      return res.status(400).json({ success: false, message: 'Giỏ hàng không được để trống' })
+    }
+
     for (const item of items) {
       if (item.quantity < 1) {
         return res.status(400).json({ success: false, message: `Số lượng sản phẩm ${item.name} không hợp lệ` })
+      }
+      const product = await Product.findById(item.product)
+      if (!product) {
+        return res.status(404).json({ success: false, message: `Sản phẩm ${item.name} không tồn tại` })
+      }
+      if (product.stock < item.quantity) {
+        return res.status(400).json({ success: false, message: `Sản phẩm ${item.name} không đủ hàng trong kho (còn ${product.stock})` })
       }
     }
     let couponDiscount = 0
