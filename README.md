@@ -3,8 +3,8 @@
 <div align="center"> 
 
 - Một website thương mại điện tử đầy đủ tính năng dành cho thiết bị gaming
+- [Demo](#) · [Ảnh giao diện](#ảnh-giao-diện) · [Hướng dẫn chạy](#hướng-dẫn-chạy-dự-án)
 
--Demo · Ảnh giao diện · Hướng dẫn chạy
 
 </div> 
 
@@ -31,7 +31,7 @@ GearVault là một website thương mại điện tử chất lượng cao đư
 ## Mục đích xây dựng
 
 * Làm portfolio/CV
-* Quay video demo
+* Quay video demo 
 * Thực hành Manual Testing & Automation Testing
 * Viết test case cho vị trí Tester/QA
 * Ứng tuyển Frontend/Fullstack Developer
@@ -57,7 +57,6 @@ GearVault là một website thương mại điện tử chất lượng cao đư
 | React Hot Toast       | Thông báo                         |
 
 ---
-
 ## Backend
 
 | Công nghệ           | Mục đích            |
@@ -71,7 +70,6 @@ GearVault là một website thương mại điện tử chất lượng cao đư
 | Morgan              | Logging request     |
 
 ---
-
 ## Testing
 
 | Công nghệ             | Mục đích           |
