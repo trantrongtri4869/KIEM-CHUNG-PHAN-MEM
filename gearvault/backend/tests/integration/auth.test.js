@@ -39,7 +39,7 @@ describe('POST /api/auth/register', () => {
       .send(userPayload())
 
     expect(res.statusCode).toBe(409)
-    expect(res.body.message).toMatch(/already registered/i)
+    expect(res.body.message).toMatch(/already exists/i)
   })
 
   it('thiếu name → 400 validation error', async () => {

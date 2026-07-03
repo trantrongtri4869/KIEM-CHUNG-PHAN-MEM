@@ -5,8 +5,7 @@ import {
   ShoppingCart, Heart, ArrowLeft, Star, Minus, Plus,
   Truck, Shield, RefreshCcw, Check, ChevronRight, Zap
 } from 'lucide-react'
-import { MOCK_REVIEWS } from '../utils/mockData'
-import { productAPI } from '../services/api'
+import { productAPI, reviewAPI } from '../services/api'
 import { Product } from '../types'
 import { useCartStore, useWishlistStore, useAuthStore } from '../store'
 import ProductCard from '../components/product/ProductCard'
@@ -29,6 +28,8 @@ export default function ProductDetailPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'specs' | 'reviews'>('overview')
   const [reviewRating, setReviewRating] = useState(5)
   const [reviewText, setReviewText] = useState('')
+  const [reviews, setReviews] = useState<any[]>([])
+  const [submittingReview, setSubmittingReview] = useState(false)
 
   useEffect(() => {
     if (!slug) return
@@ -45,6 +46,14 @@ export default function ProductDetailPage() {
       .catch(() => setRelated([]))
   }, [slug])
 
+  useEffect(() => {
+    if (!product?._id) return
+    reviewAPI
+      .getByProduct(product._id)
+      .then((res) => setReviews(res.data.data))
+      .catch(() => setReviews([]))
+  }, [product?._id])
+
   if (loading) {
     return <div className="flex items-center justify-center py-24 text-[var(--text-muted)]">Loading...</div>
   }
@@ -60,7 +69,6 @@ export default function ProductDetailPage() {
 
   const inWishlist = isInWishlist(product._id)
   const isOutOfStock = product.stock === 0
-  const reviews = MOCK_REVIEWS.filter((r) => r.product === product._id)
 
   const handleAddToCart = () => {
     if (isOutOfStock) return
@@ -74,15 +82,39 @@ export default function ProductDetailPage() {
     navigate('/checkout')
   }
 
-  const handleSubmitReview = (e: React.FormEvent) => {
+  const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!isAuthenticated) {
       toast.error('Please sign in to write a review')
       return
     }
-    toast.success('Review submitted! Thank you')
-    setReviewText('')
-    setReviewRating(5)
+    if (!product || !reviewText.trim()) return
+
+    setSubmittingReview(true)
+    try {
+      const res = await reviewAPI.create({
+        product: product._id,
+        rating: reviewRating,
+        title: reviewText.trim().slice(0, 60),
+        comment: reviewText.trim(),
+      })
+
+      // Thêm review mới lên đầu danh sách ngay lập tức
+      setReviews((prev) => [res.data.data, ...prev])
+      toast.success('Review submitted! Thank you')
+      setReviewText('')
+      setReviewRating(5)
+
+      // Lấy lại product để cập nhật rating trung bình + numReviews
+      productAPI
+        .getBySlug(slug!)
+        .then((r) => setProduct(r.data.data))
+        .catch(() => {})
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to submit review')
+    } finally {
+      setSubmittingReview(false)
+    }
   }
 
   return (
@@ -412,9 +444,9 @@ export default function ProductDetailPage() {
                         className="input-field resize-none"
                         required
                       />
-                      <button type="submit" className="btn-primary">
+                      <button type="submit" className="btn-primary" disabled={submittingReview}>
                         <Check className="w-4 h-4" />
-                        Submit Review
+                        {submittingReview ? 'Submitting...' : 'Submit Review'}
                       </button>
                     </form>
                   )}

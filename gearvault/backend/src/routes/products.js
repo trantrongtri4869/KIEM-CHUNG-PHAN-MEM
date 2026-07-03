@@ -99,6 +99,7 @@ const getCategories = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 // GET /api/products — list with filters
 router.get('/', async (req, res) => {
   try {
@@ -194,7 +195,12 @@ router.delete('/:id', protect, adminOnly, deleteProduct)
 // GET /api/products/categories
 router.get('/categories', getCategories);
 
-module.exports = { router, buildProductFilter, 
-  buildSort, calcPagination, 
-  isFlashSaleActive, createProduct, 
-  updateProduct, deleteProduct, getCategories };
+router.buildProductFilter = buildProductFilter;
+router.buildSort = buildSort;
+router.calcPagination = calcPagination;
+router.isFlashSaleActive = isFlashSaleActive;
+router.createProduct = createProduct;
+router.updateProduct = updateProduct;
+router.deleteProduct = deleteProduct;
+
+module.exports = router;
