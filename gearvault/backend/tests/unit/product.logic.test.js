@@ -59,7 +59,7 @@ describe('buildProductFilter()', () => {
   });
 
   // PCTC_1_7: Rating = 4
-  test('Filter đúng rating=5', () => {
+  test('Filter đúng rating=4', () => {
     const filter = buildProductFilter({ rating: '4' });
     expect(filter.rating).toEqual({ $gte: 4 });
   });
