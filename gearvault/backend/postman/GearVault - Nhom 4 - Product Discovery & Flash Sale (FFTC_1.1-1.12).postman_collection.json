@@ -1,0 +1,1023 @@
+{
+  "info": {
+    "_postman_id": "722fa68f-438e-4d68-a938-4407128ab8e5",
+    "name": "GearVault - Nhom 4 - Product Discovery & Flash Sale (FFTC_1.1-1.12)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "55321409",
+    "_collection_link": "https://go.postman.co/collection/55351098-722fa68f-438e-4d68-a938-4407128ab8e5?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "🔧 Setup",
+      "item": [
+        {
+          "name": "⚙️ [Setup] Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.response.code===200){",
+                  "  pm.environment.set('token', pm.response.json().data.token);",
+                  "  console.log('✅ token set');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@gearvault.com\",\n  \"password\": \"user123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📋 Test Cases — Product Discovery & Flash Sale (FFTC_1.1–1.12)",
+      "item": [
+        {
+          "name": "FFTC_1.1 — getProduct minPrice=100 maxPrice=500 (hợp lệ)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('FFTC_1.1 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('FFTC_1.1 — Sản phẩm trong khoảng giá', () => { pm.response.json().data.forEach(p => { pm.expect(p.price).to.be.at.least(100); pm.expect(p.price).to.be.at.most(500); }); });",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products?minPrice=100&maxPrice=500",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "minPrice",
+                  "value": "100"
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "500"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "FFTC_1.2 — getProduct minPrice=0 (biên dưới hợp lệ)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('FFTC_1.2 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('FFTC_1.2 — Trả về array', () => pm.expect(pm.response.json().data).to.be.an('array'));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products?minPrice=0",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "minPrice",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "FFTC_1.3 — getProduct minPrice=501 > maxPrice=500 (không hợp lệ)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('FFTC_1.3 — Status 200 (không lỗi server)', () => pm.response.to.have.status(200));",
+                  "_runTest('FFTC_1.3 — Trả về mảng rỗng', () => pm.expect(pm.response.json().data.length).to.equal(0));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products?minPrice=501&maxPrice=500",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "minPrice",
+                  "value": "501"
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "500"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "FFTC_1.4 — getProduct page=1 (hợp lệ)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('FFTC_1.4 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('FFTC_1.4 — pagination.page=1', () => pm.expect(pm.response.json().pagination.page).to.equal(1));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products?page=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "FFTC_1.5 — getProduct page=0 (biên dưới, BUG skip âm)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "// BUG: page=0 → skip = (0-1)*12 = -12 (MongoDB error)",
+                  "_runTest('FFTC_1.5 — [BUG] page=0 gây skip âm', () => pm.response.to.have.status(200));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products?page=0",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "FFTC_1.6 — getProduct price='abc' (sai kiểu dữ liệu)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('FFTC_1.6 — Status 200 (NaN filter bị ignore)', () => pm.response.to.have.status(200));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products?minPrice=abc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "minPrice",
+                  "value": "abc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "FFTC_1.7 — getProduct minPrice=-10 (giá âm, không hợp lệ)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('FFTC_1.7 — Status 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products?minPrice=-10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "minPrice",
+                  "value": "-10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "FFTC_1.8 — getFlashSale isFlashSale=true (hợp lệ)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('FFTC_1.8 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('FFTC_1.8 — isFlashSale=true', () => { pm.response.json().data.forEach(p => pm.expect(p.isFlashSale).to.be.true); });",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products/flash-sale",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "flash-sale"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "FFTC_1.9 — getFlashSale endsAt còn hạn (hợp lệ)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('FFTC_1.9 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('FFTC_1.9 — endsAt > now', () => { pm.response.json().data.forEach(function(p){ pm.expect(new Date(p.flashSaleEndsAt).getTime()).to.be.above(Date.now()); }); });",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products/flash-sale",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "flash-sale"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "FFTC_1.10 — getFlashSale endsAt=now (đúng biên, không hợp lệ $gt)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "// điều kiện $gt (không phải $gte) → sản phẩm endsAt=now bị loại",
+                  "_runTest('FFTC_1.10 — Status 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products/flash-sale",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "flash-sale"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "FFTC_1.11 — getFlashSale endsAt quá khứ (hết hạn)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('FFTC_1.11 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('FFTC_1.11 — Không có sản phẩm hết hạn', () => { pm.response.json().data.forEach(function(p){ pm.expect(new Date(p.flashSaleEndsAt).getTime()).to.be.above(Date.now()); }); });",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products/flash-sale",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "flash-sale"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "FFTC_1.12 — getFlashSale isFlashSale='abc' (sai kiểu)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('FFTC_1.12 — Status 200 (query string sai bị ignore)', () => pm.response.to.have.status(200));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products?sale=abc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "sale",
+                  "value": "abc"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000/api"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "admin_token",
+      "value": ""
+    },
+    {
+      "key": "product_id",
+      "value": ""
+    },
+    {
+      "key": "product_slug",
+      "value": ""
+    },
+    {
+      "key": "order_id",
+      "value": ""
+    },
+    {
+      "key": "user_id",
+      "value": ""
+    },
+    {
+      "key": "review_id",
+      "value": ""
+    },
+    {
+      "key": "new_product_id",
+      "value": ""
+    },
+    {
+      "key": "delete_user_id",
+      "value": ""
+    },
+    {
+      "key": "jira_base_url",
+      "value": ""
+    },
+    {
+      "key": "jira_email",
+      "value": ""
+    },
+    {
+      "key": "jira_api_token",
+      "value": ""
+    },
+    {
+      "key": "jira_project_key",
+      "value": "KAN"
+    }
+  ]
+}
