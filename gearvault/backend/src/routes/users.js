@@ -13,7 +13,7 @@ router.get('/', protect, adminOnly, async (req, res) => {
 
     const users = await User.find()
       .sort({ createdAt: -1 })
-      .skip((page - 1) * Number(limit))
+      .skip((Number(page) - 1) * Number(limit))
       .limit(Number(limit))
 
     const total = await User.countDocuments()
@@ -37,7 +37,6 @@ router.get('/', protect, adminOnly, async (req, res) => {
 // ==================== UPDATE USER ====================
 router.put('/:id', protect, adminOnly, async (req, res) => {
   try {
-
     // Kiểm tra ObjectId hợp lệ
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(404).json({
@@ -55,15 +54,31 @@ router.put('/:id', protect, adminOnly, async (req, res) => {
       })
     }
 
-    // Chỉ cập nhật các field được phép
+    // Cập nhật name
     if (req.body.name !== undefined) {
       user.name = req.body.name
     }
 
-    if (req.body.email !== undefined) {
+    // Kiểm tra email trùng trước khi cập nhật
+    if (
+      req.body.email !== undefined &&
+      req.body.email !== user.email
+    ) {
+      const existed = await User.findOne({
+        email: req.body.email
+      })
+
+      if (existed) {
+        return res.status(409).json({
+          success: false,
+          message: 'Email already registered'
+        })
+      }
+
       user.email = req.body.email
     }
 
+    // Đổi password (pre-save hook sẽ tự hash)
     if (req.body.password !== undefined) {
       user.password = req.body.password
     }
@@ -83,15 +98,6 @@ router.put('/:id', protect, adminOnly, async (req, res) => {
     })
 
   } catch (error) {
-
-    // Email bị trùng
-    if (error.code === 11000) {
-      return res.status(409).json({
-        success: false,
-        message: 'Email already registered'
-      })
-    }
-
     res.status(500).json({
       success: false,
       message: error.message
@@ -102,7 +108,6 @@ router.put('/:id', protect, adminOnly, async (req, res) => {
 // ==================== DELETE USER ====================
 router.delete('/:id', protect, adminOnly, async (req, res) => {
   try {
-
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(404).json({
         success: false,
