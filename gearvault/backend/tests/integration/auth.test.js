@@ -234,7 +234,7 @@ describe('PUT /api/auth/profile', () => {
     expect(res.statusCode).toBe(409)
     expect(res.body.success).toBe(false)
    expect(res.body.message)
-    .toBe("Email already registered")
+    .toBe("Email already exists")
   })
 
   it('không có token → 401', async () => {
