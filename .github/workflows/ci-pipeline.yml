@@ -415,70 +415,79 @@ jobs:
           node src/seeds/seed.js
         continue-on-error: true
 
-      - name: Run Postman Collection (Newman)
+      - name: Run Postman Collections (Newman) - 7 nhóm
         run: |
           VERSION="1.0.${{ github.run_number }}"
           echo "DEPLOY_VERSION=$VERSION" >> $GITHUB_ENV
           echo "🏷️ Deploy Version: $VERSION"
 
-          newman run gearvault/backend/postman/GearVault.postman_collection.json \
-            --environment gearvault/backend/postman/dev.postman_environment.json \
-            --reporters cli,htmlextra,json \
-            --reporter-htmlextra-export postman-report.html \
-            --reporter-json-export postman-results.json \
-            --suppress-exit-code
+          # Danh sách 7 file collection theo đúng tên trong repo
+          declare -a COLLECTIONS=(
+            "GearVault - Nhom 1 - Product & Category (PCTC_1.1-10.2, full).postman_collection.json"
+            "GearVault - Nhom 2 - Auth & User (AUTC_1.1-8.2, full).postman_collection.json"
+            "GearVault - Nhom 3 - Review & Admin phan 1 (RATC_1.1-3.1).postman_collection.json"
+            "GearVault - Nhom 4 - Product Discovery & Flash Sale (FFTC_1.1-1.12).postman_collection.json"
+            "GearVault - Nhom 5 - Review & Admin phan 2 (RATC_3.2-6.1).postman_collection.json"
+            "GearVault - Nhom 6 - Order Transaction - Cart & Coupon (COTC_1.1-1.11).postman_collection.json"
+            "GearVault - Nhom 7 - Order & Coupon (OCTC_1.1-6.5).postman_collection.json"
+          )
+
+          mkdir -p postman-reports
+          i=0
+          for COL in "${COLLECTIONS[@]}"; do
+            i=$((i+1))
+            echo "▶️ [$i/7] Chạy: $COL"
+            newman run "gearvault/backend/postman/$COL" \
+              --environment gearvault/backend/postman/dev.postman_environment.json \
+              --reporters cli,htmlextra,json \
+              --reporter-htmlextra-export "postman-reports/report-$i.html" \
+              --reporter-json-export "postman-reports/results-$i.json" \
+              --suppress-exit-code || true
+          done
         continue-on-error: true
 
-      - name: Parse Newman Results
+      - name: Parse Newman Results (gộp cả 7 nhóm)
         run: |
-          if [ -f "postman-results.json" ]; then
-            PASS=$(cat postman-results.json | python3 -c "
-          import json,sys
-          d = json.load(sys.stdin)
-          stats = d.get('run',{}).get('stats',{}).get('assertions',{})
-          print(stats.get('total',0) - stats.get('failed',0))
-          " 2>/dev/null || echo "0")
+          python3 -c "
+          import json, glob
 
-            FAIL=$(cat postman-results.json | python3 -c "
-          import json,sys
-          d = json.load(sys.stdin)
-          stats = d.get('run',{}).get('stats',{}).get('assertions',{})
-          print(stats.get('failed',0))
-          " 2>/dev/null || echo "0")
+          total_pass, total_fail = 0, 0
+          fail_lines = []
 
-            # Lấy danh sách test case bị fail
-            FAIL_DETAILS=$(cat postman-results.json | python3 -c "
-          import json,sys
-          d = json.load(sys.stdin)
-          fails = []
-          for ex in d.get('run',{}).get('executions',[]):
-              req_name = ex.get('item',{}).get('name','Unknown')
-              for a in ex.get('assertions',[]):
-                  if a.get('error'):
-                      fails.append(f\"- [{req_name}] {a.get('assertion','?')}: {a.get('error',{}).get('message','?')}\")
-          print('\n'.join(fails[:20]) if fails else 'Không có chi tiết')
-          " 2>/dev/null || echo "Không thể parse chi tiết")
+          for f in sorted(glob.glob('postman-reports/results-*.json')):
+              try:
+                  d = json.load(open(f, encoding='utf-8'))
+              except Exception as e:
+                  fail_lines.append(f'- [{f}] Không đọc được report: {e}')
+                  continue
+              stats = d.get('run', {}).get('stats', {}).get('assertions', {})
+              t = stats.get('total', 0)
+              fl = stats.get('failed', 0)
+              total_pass += (t - fl)
+              total_fail += fl
+              for ex in d.get('run', {}).get('executions', []):
+                  req_name = ex.get('item', {}).get('name', 'Unknown')
+                  for a in ex.get('assertions', []):
+                      if a.get('error'):
+                          fail_lines.append(f\"- [{req_name}] {a.get('assertion','?')}: {a.get('error',{}).get('message','?')}\")
 
-            echo "POSTMAN_PASS=$PASS" >> $GITHUB_ENV
-            echo "POSTMAN_FAIL=$FAIL" >> $GITHUB_ENV
-            echo "Newman: $PASS passed, $FAIL failed"
-            echo "Fail details: $FAIL_DETAILS"
+          print(f'POSTMAN_PASS={total_pass}')
+          print(f'POSTMAN_FAIL={total_fail}')
 
-            # Lưu fail details vào file để dùng ở step sau
-            echo "$FAIL_DETAILS" > postman-fail-details.txt
-          else
-            echo "POSTMAN_PASS=0" >> $GITHUB_ENV
-            echo "POSTMAN_FAIL=1" >> $GITHUB_ENV
-            echo "⚠️ Không tìm thấy postman-results.json" > postman-fail-details.txt
-          fi
+          with open('postman-fail-details.txt', 'w', encoding='utf-8') as out:
+              out.write('\n'.join(fail_lines[:30]) if fail_lines else 'Không có chi tiết')
+          " > parsed_env.txt
 
-      - name: Upload Postman Report
+          cat parsed_env.txt >> $GITHUB_ENV
+          cat parsed_env.txt
+          echo "Fail details:"
+          cat postman-fail-details.txt
+
+      - name: Upload Postman Reports
         uses: actions/upload-artifact@v4
         with:
-          name: postman-report
-          path: |
-            postman-report.html
-            postman-results.json
+          name: postman-reports
+          path: postman-reports/
         if: always()
 
       # ── Tự động tạo Bug trên Jira khi có test fail ──
