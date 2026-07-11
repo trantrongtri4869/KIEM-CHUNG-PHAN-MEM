@@ -5,41 +5,122 @@
     <classes>
       <class name="com.gearvault.tests.ProductTest">
         <methods>
-          <include name="testQuantityControls"/>
+          <include name="testClickProductCardOpensDetail"/>
+          <include name="testProductSearch"/>
+          <include name="testProductsPageLoads"/>
           <include name="testProductSearchNoResults"/>
-          <include name="setUpSuite"/>
+          <include name="testHomePageLoads"/>
+          <include name="testProductDetailPageInfo"/>
           <include name="tearDownSuite"/>
           <include name="setUp"/>
+          <include name="testShopNowNavigation"/>
+          <include name="testRelatedProductsDisplayed"/>
+          <include name="testQuantityControls"/>
+          <include name="testNavbarSearch"/>
+          <include name="setUpSuite"/>
           <include name="tearDown"/>
+          <include name="testAddToCartFromDetailPage"/>
+          <include name="testProductDetailTabs"/>
         </methods>
       </class> <!-- com.gearvault.tests.ProductTest -->
-      <class name="com.gearvault.tests.CartTest">
+      <class name="com.gearvault.tests.CheckoutTest">
         <methods>
+          <include name="testPaymentValidationEmptyForm"/>
           <include name="setUpSuite"/>
+          <include name="testBackButtonFromPaymentStep"/>
+          <include name="testCheckoutPageShowsShippingForm"/>
           <include name="tearDownSuite"/>
           <include name="setUp"/>
           <include name="tearDown"/>
+          <include name="testShippingFormValidNavigatesToPayment"/>
+          <include name="testOrderSummaryDisplayedInCheckout"/>
+          <include name="testShippingValidationEmptyForm"/>
+          <include name="testCheckoutWithEmptyCart"/>
+          <include name="testCompleteCheckoutEndToEnd"/>
+        </methods>
+      </class> <!-- com.gearvault.tests.CheckoutTest -->
+      <class name="com.gearvault.tests.LoginTest">
+        <methods>
+          <include name="testLoginSuccessAsUser"/>
+          <include name="testLoginSuccessAsAdmin"/>
+          <include name="openLoginPage"/>
+          <include name="tearDownSuite"/>
+          <include name="setUp"/>
+          <include name="testDemoUserButton"/>
+          <include name="testLoginFailWrongPassword"/>
+          <include name="testTogglePasswordVisibility"/>
+          <include name="testLoginFailWrongEmail"/>
+          <include name="setUpSuite"/>
+          <include name="testOnClickLoginAsDemoUser"/>
+          <include name="testDemoAdminButton"/>
+          <include name="tearDown"/>
+          <include name="testEmailValidationInvalidFormat"/>
+          <include name="testNavigateToRegister"/>
+        </methods>
+      </class> <!-- com.gearvault.tests.LoginTest -->
+      <class name="com.gearvault.tests.CartTest">
+        <methods>
+          <include name="testApplyValidCoupon"/>
+          <include name="setUpSuite"/>
+          <include name="testAddProductToCart"/>
+          <include name="testCheckoutRequiresLogin"/>
+          <include name="tearDownSuite"/>
+          <include name="setUp"/>
+          <include name="tearDown"/>
+          <include name="testEmptyCartState"/>
+          <include name="testProceedToCheckout"/>
           <include name="testIncreaseQuantityInCart"/>
+          <include name="testShippingCostDisplayed"/>
+          <include name="testApplyInvalidCoupon"/>
+          <include name="testRemoveItemFromCart"/>
         </methods>
       </class> <!-- com.gearvault.tests.CartTest -->
       <class name="com.gearvault.tests.ProductFilterTest">
         <methods>
+          <include name="testSortByPriceHighToLow"/>
+          <include name="testSortByBestRated"/>
           <include name="setUpSuite"/>
+          <include name="testFilterByCategory_Headsets"/>
           <include name="testClearAllFilters"/>
           <include name="tearDownSuite"/>
           <include name="setUp"/>
           <include name="openProductsPage"/>
           <include name="tearDown"/>
+          <include name="testFilterByCategory_Keyboards"/>
+          <include name="testSortByPriceLowToHigh"/>
+          <include name="testGridListViewToggle"/>
+          <include name="testFilterByCategory_Mice"/>
         </methods>
       </class> <!-- com.gearvault.tests.ProductFilterTest -->
+      <class name="com.gearvault.tests.RegisterTest">
+        <methods>
+          <include name="testRegisterEmptyFormShowsErrors"/>
+          <include name="testPasswordStrengthIndicator"/>
+          <include name="testNameTooShort"/>
+          <include name="setUpSuite"/>
+          <include name="testPasswordMismatch"/>
+          <include name="tearDownSuite"/>
+          <include name="setUp"/>
+          <include name="tearDown"/>
+          <include name="testPasswordTooShort"/>
+          <include name="testNavigateToLogin"/>
+          <include name="openRegisterPage"/>
+          <include name="testRegisterSuccess"/>
+          <include name="testTermsNotChecked"/>
+        </methods>
+      </class> <!-- com.gearvault.tests.RegisterTest -->
       <class name="com.gearvault.tests.LogoutAndNavTest">
         <methods>
+          <include name="testNavbarShopLink"/>
+          <include name="testNavbarCartIconNavigatesToCart"/>
+          <include name="testSignInLinkAppearsAfterLogout"/>
           <include name="testLogoutSuccess"/>
           <include name="setUpSuite"/>
           <include name="tearDownSuite"/>
           <include name="setUp"/>
           <include name="tearDown"/>
           <include name="testCheckoutProtectedAfterLogout"/>
+          <include name="testNavbarLogoNavigatesToHome"/>
         </methods>
       </class> <!-- com.gearvault.tests.LogoutAndNavTest -->
     </classes>

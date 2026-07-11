@@ -53,7 +53,7 @@ router.post(
             if (existed) {
                 return res.status(409).json({
                     success: false,
-                    message: "Email already exists",
+                    message: "Email already registered",
                 });
             }
 

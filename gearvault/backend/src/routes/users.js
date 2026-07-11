@@ -38,9 +38,13 @@ router.put('/:id', protect, adminOnly, async (req, res) => {
 
     await user.save();
 
+    // Không bao giờ trả password (dù đã hash) về client
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
     res.json({
       success: true,
-      data: user
+      data: userResponse
     });
   } catch (error) {
     res.status(500).json({

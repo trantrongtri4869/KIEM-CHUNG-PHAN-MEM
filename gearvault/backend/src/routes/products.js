@@ -11,8 +11,15 @@ const buildProductFilter = (query) => {
   if (brand) filter.brand = brand;
   if (minPrice || maxPrice) {
     filter.price = {};
-    if (minPrice) filter.price.$gte = Number(minPrice);
-    if (maxPrice) filter.price.$lte = Number(maxPrice);
+    if (minPrice) {
+      const min = Number(minPrice);
+      if (!isNaN(min)) filter.price.$gte = min;
+    }
+    if (maxPrice) {
+      const max = Number(maxPrice);
+      if (!isNaN(max)) filter.price.$lte = max;
+    }
+    if (Object.keys(filter.price).length === 0) delete filter.price; // tránh {} rỗng khi minPrice/maxPrice không phải số hợp lệ
   }
   if (rating) filter.rating = { $gte: Number(rating) };
   if (featured === 'true') filter.isFeatured = true;

@@ -21,6 +21,12 @@ router.post('/', protect, async (req, res) => {
   try {
     const { product, rating, title, comment } = req.body
 
+    // Validate rating TRƯỚC khi check trùng, để rating ngoài biên (0, 6, ...)
+    // luôn trả 400 thay vì bị chặn nhầm bởi lỗi 409 "đã review rồi"
+    if (rating === undefined || rating === null || rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, message: 'Rating phải nằm trong khoảng 1 đến 5' })
+    }
+
     const existing = await Review.findOne({ user: req.user._id, product })
     if (existing) return res.status(409).json({ success: false, message: 'You already reviewed this product' })
 
