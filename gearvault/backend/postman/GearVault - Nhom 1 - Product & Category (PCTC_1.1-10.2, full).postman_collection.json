@@ -1,0 +1,2106 @@
+{
+  "info": {
+    "_postman_id": "056fac4b-c304-4a77-af9a-6f39bebfd000",
+    "name": "GearVault - Nhom 1 - Product & Category (PCTC_1.1-10.2, full)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "55321409",
+    "_collection_link": "https://go.postman.co/collection/55351098-056fac4b-c304-4a77-af9a-6f39bebfd000?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "🔧 Setup",
+      "item": [
+        {
+          "name": "⚙️ [Setup] Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.response.code===200){",
+                  "  pm.environment.set('admin_token', pm.response.json().data.token);",
+                  "  console.log('✅ admin_token set');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@gearvault.com\",\n  \"password\": \"admin123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "⚙️ [Setup] Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.response.code===200){",
+                  "  pm.environment.set('token', pm.response.json().data.token);",
+                  "  console.log('✅ token set');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@gearvault.com\",\n  \"password\": \"user123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "⚙️ [Setup] Get Product ID & Slug",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.response.code===200){",
+                  "  var p=pm.response.json().data;",
+                  "  if(p&&p.length>0){",
+                  "    pm.environment.set('product_id',p[0]._id);",
+                  "    pm.environment.set('product_slug',p[0].slug);",
+                  "    console.log('✅ product_id:',p[0]._id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "⚙️ [Setup] Tạo Product tạm (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.response.code===201){",
+                  "  pm.environment.set('new_product_id', pm.response.json().data._id);",
+                  "  console.log('✅ new_product_id:', pm.response.json().data._id);",
+                  "} else { console.log('Product đã tồn tại (slug trùng)?', pm.response.code); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test CRUD Product\",\n  \"slug\": \"test-crud-product-v3\",\n  \"description\": \"temp\",\n  \"price\": 50,\n  \"category\": \"Headsets\",\n  \"brand\": \"TestBrand\",\n  \"stock\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📋 Test Cases — Product & Category (PCTC_1.1–10.2, full)",
+      "item": [
+        {
+          "name": "PCTC_1.1 — Get Products không filter",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_1.1 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('PCTC_1.1 — data là array', () => pm.expect(pm.response.json().data).to.be.an('array'));",
+                  "_runTest('PCTC_1.1 — Có pagination', () => pm.expect(pm.response.json().pagination).to.exist);",
+                  "_runTest('PCTC_1.1 — success=true', () => pm.expect(pm.response.json().success).to.be.true);",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_1.2 — Get Products lọc category+brand",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_1.2 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('PCTC_1.2 — Sản phẩm trả về đúng brand', () => {",
+                  "  var data = pm.response.json().data;",
+                  "  if(data.length > 0) pm.expect(data[0].brand).to.equal('Razer');",
+                  "});",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products?category=Gaming+Mice&brand=Razer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "Gaming+Mice"
+                },
+                {
+                  "key": "brand",
+                  "value": "Razer"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_1.3 — Get Products minPrice=maxPrice (biên bằng nhau)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_1.3 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('PCTC_1.3 — Trả sản phẩm price=X hoặc rỗng', () => {",
+                  "  var data = pm.response.json().data;",
+                  "  data.forEach(function(p){ pm.expect(p.price).to.be.at.least(149.99).and.at.most(149.99); });",
+                  "});",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products?minPrice=149.99&maxPrice=149.99",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "minPrice",
+                  "value": "149.99"
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "149.99"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_1.4 — Get Products minPrice > maxPrice",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_1.4 — Status 200 (không lỗi server)', () => pm.response.to.have.status(200));",
+                  "_runTest('PCTC_1.4 — Trả về mảng rỗng', () => pm.expect(pm.response.json().data.length).to.equal(0));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products?minPrice=500&maxPrice=100",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "minPrice",
+                  "value": "500"
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_1.5 — Get Products page=0 (ngoài biên, BUG)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "// BUG: skip âm khi page=0 → (0-1)*12 = -12",
+                  "_runTest('PCTC_1.5 — Status 200 (nhưng skip âm là BUG)', () => pm.response.to.have.status(200));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products?page=0",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_1.6 — Get Products sort không hợp lệ (fallback newest)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_1.6 — Status 200 (fallback sort)', () => pm.response.to.have.status(200));",
+                  "_runTest('PCTC_1.6 — Có kết quả (fallback hoạt động)', () => pm.expect(pm.response.json().data).to.be.an('array'));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products?sort=invalid_key",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "invalid_key"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_1.7 — Get Products tìm kiếm full-text",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_1.7 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('PCTC_1.7 — Trả về array', () => pm.expect(pm.response.json().data).to.be.an('array'));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products?search=Razer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Razer"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_2.1 — Get Featured Products",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_2.1 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('PCTC_2.1 — Tối đa 8 sản phẩm', () => pm.expect(pm.response.json().data.length).to.be.at.most(8));",
+                  "_runTest('PCTC_2.1 — Tất cả isFeatured=true', () => { pm.response.json().data.forEach(p => pm.expect(p.isFeatured).to.be.true); });",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products/featured",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "featured"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_3.1 — Get Best Sellers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_3.1 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('PCTC_3.1 — Tối đa 8 sản phẩm', () => pm.expect(pm.response.json().data.length).to.be.at.most(8));",
+                  "_runTest('PCTC_3.1 — Sort giảm dần theo sold', () => {",
+                  "  var d=pm.response.json().data; for(var i=1;i<d.length;i++) pm.expect(d[i-1].sold).to.be.at.least(d[i].sold);",
+                  "});",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products/best-sellers",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "best-sellers"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_4.1 — Get Flash Sale còn hạn",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_4.1 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('PCTC_4.1 — Tất cả isFlashSale=true', () => { pm.response.json().data.forEach(p => pm.expect(p.isFlashSale).to.be.true); });",
+                  "_runTest('PCTC_4.1 — flashSaleEndsAt trong tương lai', () => {",
+                  "  pm.response.json().data.forEach(function(p){ pm.expect(new Date(p.flashSaleEndsAt).getTime()).to.be.above(Date.now()); });",
+                  "});",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products/flash-sale",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "flash-sale"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_4.2 — Flash Sale hết hạn không xuất hiện",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_4.2 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('PCTC_4.2 — Không có sản phẩm đã hết hạn', () => {",
+                  "  pm.response.json().data.forEach(function(p){ pm.expect(new Date(p.flashSaleEndsAt).getTime()).to.be.above(Date.now()); });",
+                  "});",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products/flash-sale",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "flash-sale"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_5.1 — Get Product by Slug (tồn tại)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_5.1 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('PCTC_5.1 — slug khớp', () => pm.expect(pm.response.json().data.slug).to.equal(pm.environment.get('product_slug')));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products/{{product_slug}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{product_slug}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_5.2 — Get Product by Slug (không tồn tại)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_5.2 — Status 404', () => pm.response.to.have.status(404));",
+                  "_runTest('PCTC_5.2 — message Product not found', () => pm.expect(pm.response.json().message).to.include('not found'));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products/slug-khong-ton-tai-xyz",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "slug-khong-ton-tai-xyz"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_6.1 — Get Related Products",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_6.1 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('PCTC_6.1 — Tối đa 4 sản phẩm', () => pm.expect(pm.response.json().data.length).to.be.at.most(4));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products/{{product_slug}}/related",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{product_slug}}",
+                "related"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_7.1 — Create Product (admin, hợp lệ)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_7.1 — Status 201', () => pm.response.to.have.status(201));",
+                  "_runTest('PCTC_7.1 — success=true', () => pm.expect(pm.response.json().success).to.be.true);",
+                  "_runTest('PCTC_7.1 — Có _id', () => pm.expect(pm.response.json().data._id).to.exist);",
+                  "if(pm.response.code===201) pm.environment.set('new_product_id', pm.response.json().data._id);",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Headset Pro\",\n  \"slug\": \"test-headset-pro-nhom4\",\n  \"description\": \"Test product\",\n  \"shortDescription\": \"Short desc\",\n  \"price\": 99.99,\n  \"category\": \"Headsets\",\n  \"brand\": \"TestBrand\",\n  \"stock\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_7.2 — Create Product price âm (ngoài biên)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_7.3 — Status 400 (validation min:0)', () => pm.response.to.have.status(400));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Negative Price\",\n  \"slug\": \"negative-price-nhom4\",\n  \"price\": -1,\n  \"category\": \"Headsets\",\n  \"brand\": \"X\",\n  \"stock\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_7.3 — Create Product slug trùng (unique)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_7.4 — Status 400 (duplicate key)', () => pm.response.to.have.status(400));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Duplicate\",\n  \"slug\": \"razer-deathadder-v3-pro\",\n  \"price\": 50,\n  \"category\": \"Headsets\",\n  \"brand\": \"X\",\n  \"stock\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_7.4 — Create Product (user thường bị cấm)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_7.2 — Status 403 (adminOnly chặn)', () => pm.response.to.have.status(403));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Unauthorized Product\",\n  \"slug\": \"unauthorized-product\",\n  \"price\": 10,\n  \"category\": \"Headsets\",\n  \"brand\": \"X\",\n  \"stock\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_8.1 — Update Product (admin, hợp lệ)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_8.1 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('PCTC_8.1 — price được cập nhật', () => pm.expect(pm.response.json().data.price).to.equal(89.99));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 89.99,\n  \"stock\": 20\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/products/{{new_product_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{new_product_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_8.2 — Update Product id không tồn tại",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_8.2 — Status 404', () => pm.response.to.have.status(404));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 99\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/products/000000000000000000000000",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "000000000000000000000000"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_9.1 — Delete Product (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_9.1 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('PCTC_9.1 — message deleted', () => pm.expect(pm.response.json().message).to.include('deleted'));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products/{{new_product_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "{{new_product_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_9.2 — Delete Product id không tồn tại",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_9.2 — Status 404', () => pm.response.to.have.status(404));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products/000000000000000000000000",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "000000000000000000000000"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_10.1 — Get Categories kèm productCount",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_10.1 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('PCTC_10.1 — data là array', () => pm.expect(pm.response.json().data).to.be.an('array'));",
+                  "_runTest('PCTC_10.1 — Có productCount', () => { pm.response.json().data.forEach(c => pm.expect(c.productCount).to.be.a('number')); });",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PCTC_10.2 — Get Categories productCount=0 (category không có sản phẩm)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('PCTC_10.2 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('PCTC_10.2 — productCount >= 0', () => { pm.response.json().data.forEach(c => pm.expect(c.productCount).to.be.at.least(0)); });",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000/api"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "admin_token",
+      "value": ""
+    },
+    {
+      "key": "product_id",
+      "value": ""
+    },
+    {
+      "key": "product_slug",
+      "value": ""
+    },
+    {
+      "key": "order_id",
+      "value": ""
+    },
+    {
+      "key": "user_id",
+      "value": ""
+    },
+    {
+      "key": "review_id",
+      "value": ""
+    },
+    {
+      "key": "new_product_id",
+      "value": ""
+    },
+    {
+      "key": "delete_user_id",
+      "value": ""
+    },
+    {
+      "key": "jira_base_url",
+      "value": ""
+    },
+    {
+      "key": "jira_email",
+      "value": ""
+    },
+    {
+      "key": "jira_api_token",
+      "value": ""
+    },
+    {
+      "key": "jira_project_key",
+      "value": "KAN"
+    }
+  ]
+}

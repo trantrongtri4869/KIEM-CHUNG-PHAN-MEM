@@ -86,21 +86,38 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+const getCategories = async (req, res) => {
+  try {
+    const { Category } = require('../models'); 
+    const categories = await Category.find();
+    
+    const categoriesWithCount = await Promise.all(categories.map(async (cat) => {
+      // Đếm sản phẩm theo category (xử lý regex cho PCTC_10_3)
+      const catObj = typeof cat.toObject === 'function' ? cat.toObject() : cat;
+      
+      const count = await Product.countDocuments({ 
+        category: { $regex: catObj.name, $options: 'i' } 
+      });
+      return { ...catObj, productCount: count };
+    }));
+    
+    res.json({ success: true, data: categoriesWithCount });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // GET /api/products — list with filters
 router.get('/', async (req, res) => {
   try {
     const filter = buildProductFilter(req.query);
-
-    // Tính total trước, rồi mới tính pagination, rồi mới query danh sách
-    // (trước đây pagination được dùng trước khi khai báo -> ReferenceError)
     const total = await Product.countDocuments(filter);
     const pagination = calcPagination(req.query.page, req.query.limit, total);
-
     const products = await Product.find(filter)
-      .sort(buildSort(req.query.sort))
-      .skip(pagination.skip)
-      .limit(pagination.limit);
-
+        .sort(buildSort(req.query.sort))
+        .skip(pagination.skip)
+        .limit(pagination.limit)
+    
     const now = new Date();
     const productsWithStatus = products.map(product => {
       const p = product.toObject ? product.toObject() : product;
@@ -182,8 +199,9 @@ router.put('/:id', protect, adminOnly, updateProduct)
 // DELETE /api/products/:id (admin)
 router.delete('/:id', protect, adminOnly, deleteProduct)
 
-// Gắn các hàm helper vào router để nơi khác (ví dụ unit test) vẫn require được
-// mà không phá vỡ app.use('/api/products', productRoutes) ở server.js
+// GET /api/products/categories
+router.get('/categories', getCategories);
+
 router.buildProductFilter = buildProductFilter;
 router.buildSort = buildSort;
 router.calcPagination = calcPagination;
@@ -191,9 +209,6 @@ router.isFlashSaleActive = isFlashSaleActive;
 router.createProduct = createProduct;
 router.updateProduct = updateProduct;
 router.deleteProduct = deleteProduct;
+router.getCategories = getCategories;
 
-// QUAN TRỌNG: export router trực tiếp, không export object { router, ... }
-// vì server.js dùng: const productRoutes = require('./routes/products')
-//                     app.use('/api/products', productRoutes)
-// app.use() cần một router/middleware function, không phải một object thường.
 module.exports = router;

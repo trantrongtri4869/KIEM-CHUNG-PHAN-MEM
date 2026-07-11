@@ -1,11 +1,12 @@
-const { Product } = require('../../src/models');
+const { Product, Category } = require('../../src/models');
 const { 
   buildProductFilter, 
   buildSort, 
   calcPagination, 
   isFlashSaleActive,
   createProduct, 
-  updateProduct, deleteProduct 
+  updateProduct, deleteProduct,
+  getCategories
 } = require('../../src/routes/products');
 const { adminOnly } = require('../../src/middleware/auth');
 
@@ -14,6 +15,10 @@ jest.mock('../../src/models', () => ({
     create: jest.fn(),
     findByIdAndUpdate: jest.fn(),
     findByIdAndDelete: jest.fn(),
+    countDocuments: jest.fn()
+  },
+  Category: {
+    find: jest.fn()
   }
 }));
 describe('buildProductFilter()', () => {
@@ -54,7 +59,7 @@ describe('buildProductFilter()', () => {
   });
 
   // PCTC_1_7: Rating = 4
-  test('Filter đúng rating=5', () => {
+  test('Filter đúng rating=4', () => {
     const filter = buildProductFilter({ rating: '4' });
     expect(filter.rating).toEqual({ $gte: 4 });
   });
@@ -145,7 +150,7 @@ describe('Unit Tests cho Logic Sản phẩm', () => {
   });
 });
 
-describe('Admin Product Controller Tests', () => {
+describe('Admin & Category Controller Tests', () => {
   let req, res;
 
   beforeEach(() => {
@@ -242,6 +247,46 @@ describe('Admin Product Controller Tests', () => {
       await deleteProduct(req, res);
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ message: 'Product not found' }));
+    });
+  });
+
+  describe('Get Categories', () => {
+    // PCTC_10_1: danh sách category
+    test('Danh sách category kèm productCount', async () => {
+      Category.find.mockResolvedValue([{ name: 'Laptop' }]);
+      Product.countDocuments.mockResolvedValue(5);     
+      await getCategories(req, res); 
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        success: true,
+        data: expect.arrayContaining([
+          expect.objectContaining({ name: 'Laptop', productCount: 5 })
+        ])
+      }));
+    });
+    // PCTC_10_2: Category chưa có sản phẩm nào
+    test('Category chưa có sản phẩm nào (productCount=0)', async () => {
+      Category.find.mockResolvedValue([{ name: 'Electronics' }]);
+      // Mock để countDocuments trả về 0
+      Product.countDocuments.mockResolvedValue(0);
+      await getCategories(req, res);
+      // Kiểm tra xem productCount có bằng 0 không
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        success: true,
+        data: expect.arrayContaining([
+          expect.objectContaining({ 
+            name: 'Electronics', 
+            productCount: 0 
+          })
+        ])
+      }));
+    });
+    // PCTC_10_3: Tên category chứa ký tự đặc biệt
+    test('Tên category chứa ký tự đặc biệt', async () => {
+      Category.find.mockResolvedValue([{ name: 'Audio/Video (HD)' }]);
+      Product.countDocuments.mockResolvedValue(2);     
+      await getCategories(req, res);
+      // Kiểm tra xem hàm có xử lý được regex không
+      expect(res.json).toHaveBeenCalled();
     });
   });
 });

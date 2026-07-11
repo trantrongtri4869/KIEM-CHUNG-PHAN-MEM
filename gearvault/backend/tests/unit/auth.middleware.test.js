@@ -52,7 +52,12 @@ describe('signToken()', () => {
   })
 })
 
-// ==================== protect ====================
+// protect middleware
+// EP:
+//  - Có token hợp lệ
+//  - Không có token
+//  - Token sai
+//  - User không tồn tại
 describe('protect middleware', () => {
   beforeEach(() => {
     jest.clearAllMocks()

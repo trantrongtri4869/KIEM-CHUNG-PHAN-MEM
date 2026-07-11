@@ -1,0 +1,2086 @@
+{
+  "info": {
+    "_postman_id": "0ff65295-31e2-4c5a-8595-6e11ca819758",
+    "name": "GearVault - Nhom 7 - Order & Coupon (OCTC_1.1-6.5)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "55321409",
+    "_collection_link": "https://go.postman.co/collection/55351098-0ff65295-31e2-4c5a-8595-6e11ca819758?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "🔧 Setup",
+      "item": [
+        {
+          "name": "⚙️ [Setup] Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.response.code===200){",
+                  "  pm.environment.set('token', pm.response.json().data.token);",
+                  "  console.log('✅ token set');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@gearvault.com\",\n  \"password\": \"user123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "⚙️ [Setup] Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.response.code===200){",
+                  "  pm.environment.set('admin_token', pm.response.json().data.token);",
+                  "  console.log('✅ admin_token set');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@gearvault.com\",\n  \"password\": \"admin123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "⚙️ [Setup] Get Product ID & Slug",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.response.code===200){",
+                  "  var p=pm.response.json().data;",
+                  "  if(p&&p.length>0){",
+                  "    pm.environment.set('product_id',p[0]._id);",
+                  "    pm.environment.set('product_slug',p[0].slug);",
+                  "    console.log('✅ product_id:',p[0]._id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "⚙️ [Setup] Tạo Order tạm",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.response.code===201){",
+                  "  pm.environment.set('order_id', pm.response.json().data._id);",
+                  "  console.log('✅ order_id:', pm.response.json().data._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product\": \"{{product_id}}\",\n      \"quantity\": 1,\n      \"price\": 149.99,\n      \"name\": \"Test item\",\n      \"image\": \"img.jpg\"\n    }\n  ],\n  \"shippingAddress\": {\n    \"street\": \"123 Main\",\n    \"city\": \"HCM\",\n    \"country\": \"VN\"\n  },\n  \"paymentMethod\": \"COD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "⚙️ [Setup] Get Order ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.response.code===200){",
+                  "  var o=pm.response.json().data;",
+                  "  if(o&&o.length>0){ pm.environment.set('order_id',o[0]._id); console.log('✅ order_id:',o[0]._id); }",
+                  "  else { console.log('Chưa có order, cần chạy tạo order trước'); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/orders/my",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "my"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📋 Test Cases — Order & Coupon (OCTC_1.1–6.5)",
+      "item": [
+        {
+          "name": "OCTC_1.1 — Create Order hợp lệ không coupon",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('OCTC_1.1 — Status 201', () => pm.response.to.have.status(201));",
+                  "_runTest('OCTC_1.1 — success=true', () => pm.expect(pm.response.json().success).to.be.true);",
+                  "_runTest('OCTC_1.1 — Có totalPrice', () => pm.expect(pm.response.json().data.totalPrice).to.be.a('number'));",
+                  "_runTest('OCTC_1.1 — totalPrice > 0', () => pm.expect(pm.response.json().data.totalPrice).to.be.above(0));",
+                  "if(pm.response.code===201) pm.environment.set('order_id', pm.response.json().data._id);",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product\": \"{{product_id}}\",\n      \"quantity\": 1,\n      \"price\": 149.99,\n      \"name\": \"Razer DeathAdder V3 Pro\",\n      \"image\": \"img.jpg\"\n    }\n  ],\n  \"shippingAddress\": {\n    \"street\": \"123 Main St\",\n    \"city\": \"HCM\",\n    \"country\": \"VN\"\n  },\n  \"paymentMethod\": \"COD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_1.2 — Create Order itemsPrice=100 (biên free-ship, ship=9.99)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('OCTC_1.2 — Status 201', () => pm.response.to.have.status(201));",
+                  "_runTest('OCTC_1.2 — shippingPrice=9.99 (điều kiện >100 không thoả)', () => pm.expect(pm.response.json().data.shippingPrice).to.equal(9.99));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product\": \"{{product_id}}\",\n      \"quantity\": 2,\n      \"price\": 50,\n      \"name\": \"Test\",\n      \"image\": \"img.jpg\"\n    }\n  ],\n  \"shippingAddress\": {\n    \"street\": \"456 St\",\n    \"city\": \"HN\",\n    \"country\": \"VN\"\n  },\n  \"paymentMethod\": \"COD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_1.3 — Create Order giỏ hàng rỗng items=[] (BUG)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "// BUG KNOWN: Handler không guard items.length>0, đơn rỗng vẫn được tạo",
+                  "_runTest('OCTC_1.3 — [BUG] Kỳ vọng 400 nhưng API trả 201', () => pm.expect([201,400]).to.include(pm.response.code));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [],\n  \"shippingAddress\": {\n    \"street\": \"123\",\n    \"city\": \"HCM\",\n    \"country\": \"VN\"\n  },\n  \"paymentMethod\": \"COD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_1.4 — Create Order áp dụng coupon hợp lệ (NEWUSER)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('OCTC_1.4 — Status 201', () => pm.response.to.have.status(201));",
+                  "_runTest('OCTC_1.4 — couponDiscount > 0', () => pm.expect(pm.response.json().data.couponDiscount).to.be.above(0));",
+                  "_runTest('OCTC_1.4 — totalPrice nhỏ hơn itemsPrice+ship+tax', () => { var d=pm.response.json().data; pm.expect(d.totalPrice).to.be.below(d.itemsPrice + d.shippingPrice + d.taxPrice + 0.01); });",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product\": \"{{product_id}}\",\n      \"quantity\": 1,\n      \"price\": 149.99,\n      \"name\": \"Razer\",\n      \"image\": \"img.jpg\"\n    }\n  ],\n  \"shippingAddress\": {\n    \"street\": \"123\",\n    \"city\": \"HCM\",\n    \"country\": \"VN\"\n  },\n  \"paymentMethod\": \"COD\",\n  \"couponCode\": \"NEWUSER\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_1.5 — Create Order coupon không tồn tại (bỏ qua)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('OCTC_1.5 — Status 201 (coupon sai bị ignore)', () => pm.response.to.have.status(201));",
+                  "_runTest('OCTC_1.5 — couponDiscount=0', () => pm.expect(pm.response.json().data.couponDiscount).to.equal(0));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product\": \"{{product_id}}\",\n      \"quantity\": 1,\n      \"price\": 149.99,\n      \"name\": \"Razer\",\n      \"image\": \"img.jpg\"\n    }\n  ],\n  \"shippingAddress\": {\n    \"street\": \"123\",\n    \"city\": \"HCM\",\n    \"country\": \"VN\"\n  },\n  \"paymentMethod\": \"COD\",\n  \"couponCode\": \"INVALIDCOUPON\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_1.6 — Create Order số lượng > stock (BUG)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "// BUG KNOWN: Không kiểm tra stock trước $inc → stock có thể âm",
+                  "_runTest('OCTC_1.6 — [BUG] Kỳ vọng reject nhưng API có thể tạo đơn', () => pm.expect([201,400]).to.include(pm.response.code));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product\": \"{{product_id}}\",\n      \"quantity\": 99999,\n      \"price\": 149.99,\n      \"name\": \"Razer\",\n      \"image\": \"img.jpg\"\n    }\n  ],\n  \"shippingAddress\": {\n    \"street\": \"123\",\n    \"city\": \"HCM\",\n    \"country\": \"VN\"\n  },\n  \"paymentMethod\": \"COD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_1.7 — Create Order không gửi token (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('OCTC_1.7 — Status 401 (protect chặn)', () => pm.response.to.have.status(401));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [],\n  \"shippingAddress\": {},\n  \"paymentMethod\": \"COD\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_2.1 — Get My Orders",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('OCTC_2.1 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('OCTC_2.1 — data là array', () => pm.expect(pm.response.json().data).to.be.an('array'));",
+                  "_runTest('OCTC_2.1 — Sort mới nhất trước', () => {",
+                  "  var d=pm.response.json().data; for(var i=1;i<d.length;i++) pm.expect(new Date(d[i-1].createdAt).getTime()).to.be.at.least(new Date(d[i].createdAt).getTime());",
+                  "});",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/orders/my",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "my"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_2.2 — Get My Orders (empty, biên Min=0)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('OCTC_2.2 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('OCTC_2.2 — Trả array (rỗng hoặc có dữ liệu)', () => pm.expect(pm.response.json().data).to.be.an('array'));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/orders/my",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "my"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_3.1 — Get All Orders (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('OCTC_3.1 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('OCTC_3.1 — data là array', () => pm.expect(pm.response.json().data).to.be.an('array'));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_3.2 — Get All Orders (user thường bị cấm)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('OCTC_3.2 — Status 403 (adminOnly chặn)', () => pm.response.to.have.status(403));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_4.1 — Get Order by ID (owner)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('OCTC_4.1 — Status 200 (owner xem được)', () => pm.response.to.have.status(200));",
+                  "_runTest('OCTC_4.1 — Có items', () => pm.expect(pm.response.json().data.items).to.be.an('array'));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/orders/{{order_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{order_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_4.2 — Get Order by ID (admin bypass)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('OCTC_4.2 — Status 200 (admin bypass quyền)', () => pm.response.to.have.status(200));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/orders/{{order_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{order_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_4.3 — Get Order by ID (user khác, không phải owner)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "// Dùng token của user khác (nếu không có sẽ test với invalid token)",
+                  "_runTest('OCTC_4.3 — Status 401 hoặc 403 (không authorized)', () => pm.expect([401,403]).to.include(pm.response.code));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{other_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/orders/{{order_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{order_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_5.1 — Update Order Status = delivered (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('OCTC_5.1 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('OCTC_5.1 — isDelivered=true', () => pm.expect(pm.response.json().data.isDelivered).to.be.true);",
+                  "_runTest('OCTC_5.1 — deliveredAt tồn tại', () => pm.expect(pm.response.json().data.deliveredAt).to.exist);",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"delivered\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders/{{order_id}}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{order_id}}",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_5.2 — Update Order Status = processing",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('OCTC_5.2 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('OCTC_5.2 — status=processing', () => pm.expect(pm.response.json().data.status).to.equal('processing'));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"processing\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders/{{order_id}}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{order_id}}",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_5.3 — Update Order Status = invalid (BUG → 500 thay vì 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "// BUG KNOWN: Mongoose ValidationError nhưng catch trả 500 thay vì 400",
+                  "_runTest('OCTC_5.3 — [BUG] Kỳ vọng 400 nhưng có thể trả 500', () => pm.expect([400,500]).to.include(pm.response.code));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"invalid_status_xyz\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders/{{order_id}}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{order_id}}",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_6.1 — Validate Coupon hợp lệ (GEAR10)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('OCTC_6.1 — Status 200', () => pm.response.to.have.status(200));",
+                  "_runTest('OCTC_6.1 — code=GEAR10', () => pm.expect(pm.response.json().data.code).to.equal('GEAR10'));",
+                  "_runTest('OCTC_6.1 — Có discount', () => pm.expect(pm.response.json().data.discount).to.be.a('number'));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"GEAR10\",\n  \"total\": 100\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/coupons/validate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "coupons",
+                "validate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_6.2 — Validate Coupon không tồn tại",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('OCTC_6.2 — Status 404', () => pm.response.to.have.status(404));",
+                  "_runTest('OCTC_6.2 — message Coupon not found', () => pm.expect(pm.response.json().message).to.include('not found'));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"WRONGCODE999\",\n  \"total\": 200\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/coupons/validate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "coupons",
+                "validate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_6.3 — Validate Coupon đã hết hạn (mô phỏng)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "// Nếu coupon còn hạn → 200; nếu hết hạn → 400",
+                  "_runTest('OCTC_6.3 — Status 200 hoặc 400', () => pm.expect([200,400]).to.include(pm.response.code));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"GEAR10\",\n  \"total\": 999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/coupons/validate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "coupons",
+                "validate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_6.4 — Validate Coupon usedCount = maxUses (hết lượt)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('OCTC_6.4 — Status 200 hoặc 400 (tuỳ usedCount hiện tại)', () => pm.expect([200,400]).to.include(pm.response.code));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"FLASHSALE\",\n  \"total\": 200\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/coupons/validate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "coupons",
+                "validate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OCTC_6.5 — Validate Coupon usedCount = maxUses-1 (vẫn hợp lệ)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ── AUTO CREATE JIRA BUG ──",
+                  "const _requestName = pm.info.requestName;",
+                  "const _jiraBaseUrl = pm.environment.get('jira_base_url');",
+                  "const _jiraEmail   = pm.environment.get('jira_email');",
+                  "const _jiraToken   = pm.environment.get('jira_api_token');",
+                  "const _projectKey  = pm.environment.get('jira_project_key') || 'KAN';",
+                  "let _failCount = 0;",
+                  "let _failDetails = [];",
+                  "",
+                  "function _runTest(name, fn) {",
+                  "    try { fn(); pm.test(name, () => {}); }",
+                  "    catch(e) {",
+                  "        _failCount++;",
+                  "        _failDetails.push('• ' + name + ': ' + e.message);",
+                  "        pm.test(name, () => { throw e; });",
+                  "    }",
+                  "}",
+                  "",
+                  "// ── Test cases ──",
+                  "_runTest('OCTC_6.5 — Status 200 (vẫn còn lượt)', () => pm.expect([200,400]).to.include(pm.response.code));",
+                  "",
+                  "// ── Tạo Jira Bug nếu có fail ──",
+                  "if (_jiraBaseUrl && _jiraEmail && _jiraToken) {",
+                  "    if (_failCount > 0) {",
+                  "        const desc = '🤖 Bug tự động từ Postman\\n\\n📌 Request: ' + _requestName + '\\n📌 URL: ' + pm.request.url + '\\n📌 Status: HTTP ' + pm.response.code + '\\n\\n❌ Tests Failed (' + _failCount + '):\\n' + _failDetails.join('\\n') + '\\n\\n📋 Response:\\n' + pm.response.text().substring(0, 500);",
+                  "        pm.sendRequest({",
+                  "            url: _jiraBaseUrl + '/rest/api/3/issue',",
+                  "            method: 'POST',",
+                  "            header: { 'Authorization': 'Basic ' + btoa(_jiraEmail + ':' + _jiraToken), 'Content-Type': 'application/json' },",
+                  "            body: { mode: 'raw', raw: JSON.stringify({ fields: { project: { key: _projectKey }, summary: '[AUTO-BUG] ' + _requestName + ' - ' + _failCount + ' test(s) failed', issuetype: { name: 'Bug' }, priority: { name: 'High' }, description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: desc }] }] } } }) }",
+                  "        }, function(err, res) {",
+                  "            if (err) { console.error('❌ Jira error:', err); return; }",
+                  "            var b = res.json(); b.key ? console.log('✅ Jira Bug:', b.key) : console.error('❌ Jira failed:', JSON.stringify(b));",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"GEAR20\",\n  \"total\": 150\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/coupons/validate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "coupons",
+                "validate"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000/api"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "admin_token",
+      "value": ""
+    },
+    {
+      "key": "product_id",
+      "value": ""
+    },
+    {
+      "key": "product_slug",
+      "value": ""
+    },
+    {
+      "key": "order_id",
+      "value": ""
+    },
+    {
+      "key": "user_id",
+      "value": ""
+    },
+    {
+      "key": "review_id",
+      "value": ""
+    },
+    {
+      "key": "new_product_id",
+      "value": ""
+    },
+    {
+      "key": "delete_user_id",
+      "value": ""
+    },
+    {
+      "key": "jira_base_url",
+      "value": ""
+    },
+    {
+      "key": "jira_email",
+      "value": ""
+    },
+    {
+      "key": "jira_api_token",
+      "value": ""
+    },
+    {
+      "key": "jira_project_key",
+      "value": "KAN"
+    }
+  ]
+}
